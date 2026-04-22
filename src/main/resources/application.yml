@@ -1,34 +1,20 @@
 spring:
-  profiles:
-    active: dev
-
   application:
     name: smart-agriculture
-
+  profiles:
+    active: dev
   jpa:
     open-in-view: false
-    properties:
-      hibernate:
-        format_sql: true
-
   flyway:
     enabled: true
     baseline-on-migrate: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
 
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: method
 
 jwt:
-  secret: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET:8a3c9b745e1f0c2d6e4b8a9c3f1e0d2b7a6c5f4e3d2b1a0c9f8e7d6c5b4a3f2e}
   expiration: 86400000
