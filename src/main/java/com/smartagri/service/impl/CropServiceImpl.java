@@ -1,9 +1,9 @@
 package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.CropDto;
-import com.smartagri.domain.entity.Crop;
-import com.smartagri.domain.entity.User;
 import com.smartagri.domain.enums.CropStatus;
+import com.smartagri.entity.Crop;
+import com.smartagri.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
 import com.smartagri.exception.UnauthorizedException;
 import com.smartagri.repository.CropRepository;
@@ -17,9 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Concrete implementation of {@link CropService}.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -37,8 +34,8 @@ public class CropServiceImpl implements CropService {
         Crop crop = Crop.builder()
                 .cropName(dto.getCropName())
                 .cropType(dto.getCropType())
-                .season(dto.getSeason())
-                .status(dto.getStatus() != null ? dto.getStatus() : CropStatus.PLANTED)
+                .season(dto.getSeason() != null ? com.smartagri.entity.Season.valueOf(dto.getSeason().name()) : null)
+                .status(dto.getStatus() != null ? com.smartagri.entity.CropStatus.valueOf(dto.getStatus().name()) : com.smartagri.entity.CropStatus.PLANTED)
                 .plantingDate(dto.getPlantingDate())
                 .expectedHarvestDate(dto.getExpectedHarvestDate())
                 .areaInAcres(dto.getAreaInAcres())
@@ -81,7 +78,9 @@ public class CropServiceImpl implements CropService {
 
         crop.setCropName(dto.getCropName());
         crop.setCropType(dto.getCropType());
-        crop.setSeason(dto.getSeason());
+        if (dto.getSeason() != null) {
+            crop.setSeason(com.smartagri.entity.Season.valueOf(dto.getSeason().name()));
+        }
         crop.setPlantingDate(dto.getPlantingDate());
         crop.setExpectedHarvestDate(dto.getExpectedHarvestDate());
         crop.setActualHarvestDate(dto.getActualHarvestDate());
@@ -96,7 +95,7 @@ public class CropServiceImpl implements CropService {
     public CropDto updateCropStatus(Long id, CropStatus newStatus, String requesterEmail) {
         Crop crop = findCropOrThrow(id);
         assertOwnerOrAdmin(crop, requesterEmail);
-        crop.setStatus(newStatus);
+        crop.setStatus(com.smartagri.entity.CropStatus.valueOf(newStatus.name()));
         log.info("Crop id={} status updated to {} by {}", id, newStatus, requesterEmail);
         return toDto(cropRepository.save(crop));
     }
@@ -109,8 +108,6 @@ public class CropServiceImpl implements CropService {
         cropRepository.delete(crop);
         log.info("Crop id={} deleted by {}", id, requesterEmail);
     }
-
-    // ─── helpers ─────────────────────────────────────────────────────────────
 
     private Crop findCropOrThrow(Long id) {
         return cropRepository.findById(id)
@@ -136,15 +133,21 @@ public class CropServiceImpl implements CropService {
         dto.setId(crop.getId());
         dto.setCropName(crop.getCropName());
         dto.setCropType(crop.getCropType());
-        dto.setSeason(crop.getSeason());
-        dto.setStatus(crop.getStatus());
+        if (crop.getSeason() != null) {
+            dto.setSeason(com.smartagri.domain.enums.Season.valueOf(crop.getSeason().name()));
+        }
+        if (crop.getStatus() != null) {
+            dto.setStatus(com.smartagri.domain.enums.CropStatus.valueOf(crop.getStatus().name()));
+        }
         dto.setPlantingDate(crop.getPlantingDate());
         dto.setExpectedHarvestDate(crop.getExpectedHarvestDate());
         dto.setActualHarvestDate(crop.getActualHarvestDate());
         dto.setAreaInAcres(crop.getAreaInAcres());
         dto.setNotes(crop.getNotes());
-        dto.setFarmerId(crop.getFarmer().getId());
-        dto.setFarmerName(crop.getFarmer().getFullName());
+        if (crop.getFarmer() != null) {
+            dto.setFarmerId(crop.getFarmer().getId());
+            dto.setFarmerName(crop.getFarmer().getFullName());
+        }
         return dto;
     }
 }
