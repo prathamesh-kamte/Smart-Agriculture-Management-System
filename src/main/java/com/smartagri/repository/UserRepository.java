@@ -1,6 +1,6 @@
 package com.smartagri.repository;
 
-import com.smartagri.domain.entity.User;
+import com.smartagri.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
