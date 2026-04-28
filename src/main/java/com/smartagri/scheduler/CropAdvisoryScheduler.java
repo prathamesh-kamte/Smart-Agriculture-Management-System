@@ -43,7 +43,7 @@ public class CropAdvisoryScheduler {
     public void generateIrrigationAdvisories() {
         log.info("=== [Scheduler] Irrigation advisory check triggered ===");
         try {
-            advisoryService.runScheduledAdvisoryGeneration();
+            advisoryService.runScheduledIrrigationAdvisories();
             log.info("=== [Scheduler] Irrigation advisory check completed ===");
         } catch (Exception ex) {
             log.error("=== [Scheduler] Irrigation advisory check failed: {} ===", ex.getMessage(), ex);

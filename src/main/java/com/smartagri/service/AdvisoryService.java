@@ -37,4 +37,9 @@ public interface AdvisoryService {
      * across every farmer in the system (invoked by the scheduler).
      */
     void runScheduledAdvisoryGeneration();
+
+    /**
+     * Admin-only: generate and persist irrigation advisories for all active crops.
+     */
+    void runScheduledIrrigationAdvisories();
 }
