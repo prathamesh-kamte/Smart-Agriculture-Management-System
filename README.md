@@ -67,15 +67,16 @@ Once the application is running, access the documentation interface at:
 | `POST` | `/api/expenses` | Log a new expense against a specific crop | Farmer |
 | `GET` | `/api/advisories/active` | Retrieve current rule-based advisories | Farmer |
 
-## 🛠️ Installation & Setup Instructions
+## 🛠️ Installation & Deployment
 
-### Prerequisites
-- **Java Development Kit (JDK) 17** or higher
+### 1. Prerequisites
+Ensure you have the following installed on your system:
+- **Java Development Kit (JDK) 17+**
 - **Maven 3.8+**
 - **MySQL Server 8.0+**
-- **Git**
+- **Docker & Docker Compose** (Optional, for containerized deployment)
 
-### Step-by-Step Setup
+### 2. Local Development Setup
 
 1. **Clone the repository:**
    ```bash
@@ -84,56 +85,50 @@ Once the application is running, access the documentation interface at:
    ```
 
 2. **Database Configuration:**
-   Create a new MySQL database named `smart_agriculture`.
+   Create a new MySQL database for the application.
    ```sql
    CREATE DATABASE smart_agriculture;
    ```
 
 3. **Configure Environment Variables:**
-   Create an `application-dev.yml` (or update `application.properties`) in the `src/main/resources` directory.
-
-   ```yaml
-   spring:
-     datasource:
-       url: jdbc:mysql://localhost:3306/smart_agriculture?useSSL=false&serverTimezone=UTC
-       username: ${DB_USERNAME}
-       password: ${DB_PASSWORD}
-     jpa:
-       hibernate:
-         ddl-auto: update
-       show-sql: true
-
-   jwt:
-     secret: ${JWT_SECRET_KEY}
-     expiration: 86400000 # 24 hours in ms
+   You can set up your `application-dev.yml` or export the necessary environment variables directly. Run the application using the Maven Spring Boot plugin:
+   ```bash
+   mvn spring-boot:run
    ```
 
-## 🚀 Running Locally
+### 3. Required Environment Variables
 
-Ensure your MySQL server is running and your environment variables are set.
+When running the application, provide the following environment variables:
 
-Using Maven, execute the Spring Boot application:
+| Variable | Description |
+|---|---|
+| `DB_USERNAME` | Your MySQL database username (e.g., `root`) |
+| `DB_PASSWORD` | Your MySQL database password |
+| `JWT_SECRET_KEY` | A secure Base64 encoded secret key for signing JWT tokens (min 256-bit) |
 
+### 4. Building the JAR
+
+To compile and package the application into a standalone executable JAR:
 ```bash
-mvn clean install
-mvn spring-boot:run
-```
-
-Alternatively, package the application and run the JAR:
-```bash
-mvn clean package
+mvn clean package -DskipTests
 java -jar target/smart-agriculture-0.0.1-SNAPSHOT.jar
 ```
 
-The application will start on `http://localhost:8080`.
+### 5. Docker Deployment
 
-## ⚙️ Environment Variables
+To run the application along with the MySQL database as Docker containers:
+```bash
+docker build -t smart-agriculture-app .
+docker-compose up --build -d
+```
+*Note: Make sure to create a `.env` file containing the required environment variables in the project root before running `docker-compose`.*
 
-For security best practices, avoid hardcoding sensitive data. Provide the following environment variables when running the application:
+### 6. Accessing Swagger UI
 
-- `DB_USERNAME`: Database user (e.g., `root`)
-- `DB_PASSWORD`: Database password
-- `JWT_SECRET_KEY`: Base64 encoded secret key for signing JWT tokens (Minimum 256-bit).
+Once the application is successfully running, the interactive API documentation will be available at:
+```text
+http://localhost:8080/swagger-ui.html
+```
 
 ## 🔮 Future Enhancements
 
