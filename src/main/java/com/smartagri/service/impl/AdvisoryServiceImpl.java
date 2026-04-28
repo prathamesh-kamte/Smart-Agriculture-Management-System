@@ -99,6 +99,21 @@ public class AdvisoryServiceImpl implements AdvisoryService {
         }
     }
 
+    @Override
+    public void runScheduledIrrigationAdvisories() {
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            try {
+                // In a real application, you might use a more specific method
+                // that evaluates only irrigation rules. For simplicity, we reuse
+                // the main generation which includes irrigation checks.
+                generateAdvisories(user.getEmail());
+            } catch (Exception e) {
+                log.warn("Failed to generate irrigation advisories for user: {}", user.getEmail(), e);
+            }
+        }
+    }
+
     private synchronized long getNextId() {
         return idCounter++;
     }
