@@ -2,9 +2,11 @@ package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.AdvisoryDto;
 import com.smartagri.engine.AdvisoryRuleEngine;
+import com.smartagri.entity.Advisory;
 import com.smartagri.entity.Crop;
 import com.smartagri.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
+import com.smartagri.repository.AdvisoryRepository;
 import com.smartagri.repository.CropRepository;
 import com.smartagri.repository.UserRepository;
 import com.smartagri.service.AdvisoryService;
@@ -16,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,37 +28,45 @@ public class AdvisoryServiceImpl implements AdvisoryService {
 
     private final CropRepository cropRepository;
     private final UserRepository userRepository;
+    private final AdvisoryRepository advisoryRepository;
     private final AdvisoryRuleEngine ruleEngine;
 
-    private final ConcurrentHashMap<Long, List<AdvisoryDto>> advisoryStore = new ConcurrentHashMap<>();
-    private long idCounter = 1L;
-
     @Override
+    @Transactional
     public List<AdvisoryDto> generateAdvisories(String farmerEmail) {
         User farmer = userRepository.findByEmail(farmerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
 
         List<Crop> activeCrops = cropRepository.findActiveCropsByFarmerId(farmer.getId());
-        List<AdvisoryDto> newAdvisories = new ArrayList<>();
+        List<AdvisoryDto> generatedAdvisories = new ArrayList<>();
+        List<Advisory> advisoriesToSave = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
         for (Crop crop : activeCrops) {
             List<AdvisoryDto> generated = ruleEngine.evaluate(crop);
             for (AdvisoryDto dto : generated) {
-                dto.setId(getNextId());
-                dto.setGeneratedAt(now);
-                dto.setAcknowledged(false);
-                newAdvisories.add(dto);
+                Advisory advisory = Advisory.builder()
+                        .title(dto.getTitle())
+                        .message(dto.getMessage())
+                        .severity(dto.getSeverity())
+                        .category(dto.getCategory())
+                        .generatedAt(now)
+                        .acknowledged(false)
+                        .crop(crop)
+                        .farmer(farmer)
+                        .build();
+                advisoriesToSave.add(advisory);
             }
         }
 
-        advisoryStore.merge(farmer.getId(), new CopyOnWriteArrayList<>(newAdvisories), (existing, newAdv) -> {
-            existing.addAll(newAdv);
-            return existing;
-        });
+        List<Advisory> savedAdvisories = advisoryRepository.saveAll(advisoriesToSave);
+        
+        for (Advisory saved : savedAdvisories) {
+            generatedAdvisories.add(mapToDto(saved));
+        }
 
-        log.info("Generated {} advisories for farmer: {}", newAdvisories.size(), farmerEmail);
-        return newAdvisories;
+        log.info("Generated {} advisories for farmer: {}", savedAdvisories.size(), farmerEmail);
+        return generatedAdvisories;
     }
 
     @Override
@@ -66,28 +74,32 @@ public class AdvisoryServiceImpl implements AdvisoryService {
         User farmer = userRepository.findByEmail(farmerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
 
-        List<AdvisoryDto> advisories = advisoryStore.getOrDefault(farmer.getId(), new CopyOnWriteArrayList<>());
+        List<Advisory> advisories = advisoryRepository.findByFarmerIdAndAcknowledgedFalse(farmer.getId());
         return advisories.stream()
-                .filter(a -> !a.isAcknowledged())
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public void acknowledgeAdvisory(Long advisoryId, String farmerEmail) {
         User farmer = userRepository.findByEmail(farmerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
 
-        List<AdvisoryDto> advisories = advisoryStore.getOrDefault(farmer.getId(), new CopyOnWriteArrayList<>());
-        AdvisoryDto advisory = advisories.stream()
-                .filter(a -> a.getId().equals(advisoryId))
-                .findFirst()
+        Advisory advisory = advisoryRepository.findById(advisoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Advisory not found with id: " + advisoryId));
 
+        if (!advisory.getFarmer().getId().equals(farmer.getId())) {
+            throw new ResourceNotFoundException("Advisory not found with id: " + advisoryId + " for user: " + farmerEmail);
+        }
+
         advisory.setAcknowledged(true);
+        advisoryRepository.save(advisory);
         log.info("Advisory id={} acknowledged by farmer: {}", advisoryId, farmerEmail);
     }
 
     @Override
+    @Transactional
     public void runScheduledAdvisoryGeneration() {
         List<User> users = userRepository.findAll();
         for (User user : users) {
@@ -100,13 +112,11 @@ public class AdvisoryServiceImpl implements AdvisoryService {
     }
 
     @Override
+    @Transactional
     public void runScheduledIrrigationAdvisories() {
         List<User> users = userRepository.findAll();
         for (User user : users) {
             try {
-                // In a real application, you might use a more specific method
-                // that evaluates only irrigation rules. For simplicity, we reuse
-                // the main generation which includes irrigation checks.
                 generateAdvisories(user.getEmail());
             } catch (Exception e) {
                 log.warn("Failed to generate irrigation advisories for user: {}", user.getEmail(), e);
@@ -114,7 +124,17 @@ public class AdvisoryServiceImpl implements AdvisoryService {
         }
     }
 
-    private synchronized long getNextId() {
-        return idCounter++;
+    private AdvisoryDto mapToDto(Advisory advisory) {
+        return AdvisoryDto.builder()
+                .id(advisory.getId())
+                .cropId(advisory.getCrop() != null ? advisory.getCrop().getId() : null)
+                .cropName(advisory.getCrop() != null ? advisory.getCrop().getCropName() : null)
+                .title(advisory.getTitle())
+                .message(advisory.getMessage())
+                .severity(advisory.getSeverity())
+                .category(advisory.getCategory())
+                .generatedAt(advisory.getGeneratedAt())
+                .acknowledged(advisory.isAcknowledged())
+                .build();
     }
 }
