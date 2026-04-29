@@ -27,4 +27,16 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     /** Sum of expenses for a given crop. */
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.crop.id = :cropId")
     BigDecimal sumByCropId(Long cropId);
+
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.crop.farmer.id = :farmerId AND e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    BigDecimal sumExpensesForFarmerInDateRange(@Param("farmerId") Long farmerId, @Param("startDate") java.time.LocalDate startDate, @Param("endDate") java.time.LocalDate endDate);
+
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    BigDecimal sumAllExpensesInDateRange(@Param("startDate") java.time.LocalDate startDate, @Param("endDate") java.time.LocalDate endDate);
+
+    @Query("SELECT YEAR(e.expenseDate), MONTH(e.expenseDate), SUM(e.amount) FROM Expense e WHERE e.crop.farmer.id = :farmerId AND e.expenseDate >= :startDate GROUP BY YEAR(e.expenseDate), MONTH(e.expenseDate) ORDER BY YEAR(e.expenseDate), MONTH(e.expenseDate)")
+    List<Object[]> getMonthlyTrendForFarmer(@Param("farmerId") Long farmerId, @Param("startDate") java.time.LocalDate startDate);
+
+    @Query("SELECT YEAR(e.expenseDate), MONTH(e.expenseDate), SUM(e.amount) FROM Expense e WHERE e.expenseDate >= :startDate GROUP BY YEAR(e.expenseDate), MONTH(e.expenseDate) ORDER BY YEAR(e.expenseDate), MONTH(e.expenseDate)")
+    List<Object[]> getMonthlyTrendForAdmin(@Param("startDate") java.time.LocalDate startDate);
 }

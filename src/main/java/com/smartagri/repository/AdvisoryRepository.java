@@ -12,4 +12,8 @@ public interface AdvisoryRepository extends JpaRepository<Advisory, Long> {
     List<Advisory> findByFarmerIdAndAcknowledgedFalse(Long farmerId);
     
     List<Advisory> findByCropId(Long cropId);
+
+    long countByFarmerIdAndAcknowledgedFalse(Long farmerId);
+
+    long countByAcknowledgedFalse();
 }
