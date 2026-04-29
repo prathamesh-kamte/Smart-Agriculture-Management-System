@@ -22,7 +22,7 @@ public interface AdvisoryService {
      * Retrieve the most recent active (unacknowledged) advisories for
      * the authenticated farmer.
      */
-    List<AdvisoryDto> getActiveAdvisories(String farmerEmail);
+    com.smartagri.domain.dto.PageResponse<AdvisoryDto> getActiveAdvisories(String farmerEmail, String severity, org.springframework.data.domain.Pageable pageable);
 
     /**
      * Acknowledge / dismiss an advisory by its ID.

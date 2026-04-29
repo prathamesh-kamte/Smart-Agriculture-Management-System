@@ -37,9 +37,13 @@ public class ExpenseController {
 
     @GetMapping
     @Operation(summary = "Get my expenses")
-    public ResponseEntity<List<ExpenseDto>> getMyExpenses(
+    public ResponseEntity<com.smartagri.domain.dto.PageResponse<ExpenseDto>> getMyExpenses(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) java.time.LocalDate fromDate,
+            @RequestParam(required = false) java.time.LocalDate toDate,
+            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(expenseService.getMyExpenses(userDetails.getUsername()));
+        return ResponseEntity.ok(expenseService.getMyExpenses(userDetails.getUsername(), category, fromDate, toDate, pageable));
     }
 
     @GetMapping("/all")

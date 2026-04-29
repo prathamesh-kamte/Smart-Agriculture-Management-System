@@ -39,4 +39,15 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     @Query("SELECT YEAR(e.expenseDate), MONTH(e.expenseDate), SUM(e.amount) FROM Expense e WHERE e.expenseDate >= :startDate GROUP BY YEAR(e.expenseDate), MONTH(e.expenseDate) ORDER BY YEAR(e.expenseDate), MONTH(e.expenseDate)")
     List<Object[]> getMonthlyTrendForAdmin(@Param("startDate") java.time.LocalDate startDate);
+
+    @Query("SELECT e FROM Expense e WHERE e.crop.farmer.email = :email " +
+           "AND (:category IS NULL OR e.category = :category) " +
+           "AND (CAST(:fromDate AS java.time.LocalDate) IS NULL OR e.expenseDate >= :fromDate) " +
+           "AND (CAST(:toDate AS java.time.LocalDate) IS NULL OR e.expenseDate <= :toDate)")
+    org.springframework.data.domain.Page<Expense> findByFarmerEmailAndFilters(
+            @Param("email") String email,
+            @Param("category") String category,
+            @Param("fromDate") java.time.LocalDate fromDate,
+            @Param("toDate") java.time.LocalDate toDate,
+            org.springframework.data.domain.Pageable pageable);
 }

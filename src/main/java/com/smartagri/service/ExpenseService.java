@@ -20,7 +20,7 @@ public interface ExpenseService {
     List<ExpenseDto> getExpensesByCrop(Long cropId, String requesterEmail);
 
     /** All expenses for the authenticated farmer across all crops. */
-    List<ExpenseDto> getMyExpenses(String farmerEmail);
+    com.smartagri.domain.dto.PageResponse<ExpenseDto> getMyExpenses(String farmerEmail, String category, java.time.LocalDate fromDate, java.time.LocalDate toDate, org.springframework.data.domain.Pageable pageable);
 
     /** All expenses in the system (admin only). */
     List<ExpenseDto> getAllExpenses();

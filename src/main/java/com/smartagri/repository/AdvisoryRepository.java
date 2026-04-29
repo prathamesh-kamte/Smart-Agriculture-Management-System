@@ -16,4 +16,11 @@ public interface AdvisoryRepository extends JpaRepository<Advisory, Long> {
     long countByFarmerIdAndAcknowledgedFalse(Long farmerId);
 
     long countByAcknowledgedFalse();
+
+    @Query("SELECT a FROM Advisory a WHERE a.farmer.email = :email AND a.acknowledged = false " +
+           "AND (:severity IS NULL OR a.severity = :severity)")
+    org.springframework.data.domain.Page<Advisory> findActiveByFarmerEmailAndFilters(
+            @Param("email") String email,
+            @Param("severity") String severity,
+            org.springframework.data.domain.Pageable pageable);
 }

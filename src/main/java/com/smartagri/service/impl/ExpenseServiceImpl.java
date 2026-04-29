@@ -71,11 +71,9 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public List<ExpenseDto> getMyExpenses(String farmerEmail) {
-        User farmer = findUserOrThrow(farmerEmail);
-        return expenseRepository.findAllByFarmerId(farmer.getId()).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public com.smartagri.domain.dto.PageResponse<ExpenseDto> getMyExpenses(String farmerEmail, String category, java.time.LocalDate fromDate, java.time.LocalDate toDate, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<Expense> page = expenseRepository.findByFarmerEmailAndFilters(farmerEmail, category, fromDate, toDate, pageable);
+        return com.smartagri.domain.dto.PageResponse.of(page, this::toDto);
     }
 
     @Override

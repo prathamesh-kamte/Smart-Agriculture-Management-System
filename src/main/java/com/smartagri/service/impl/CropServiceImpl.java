@@ -56,11 +56,11 @@ public class CropServiceImpl implements CropService {
     }
 
     @Override
-    public List<CropDto> getMyCrops(String farmerEmail) {
-        User farmer = findUserOrThrow(farmerEmail);
-        return cropRepository.findByFarmerId(farmer.getId()).stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public com.smartagri.domain.dto.PageResponse<CropDto> getMyCrops(String farmerEmail, CropStatus status, com.smartagri.domain.enums.Season season, org.springframework.data.domain.Pageable pageable) {
+        com.smartagri.entity.CropStatus entityStatus = status != null ? com.smartagri.entity.CropStatus.valueOf(status.name()) : null;
+        com.smartagri.entity.Season entitySeason = season != null ? com.smartagri.entity.Season.valueOf(season.name()) : null;
+        org.springframework.data.domain.Page<Crop> page = cropRepository.findByFarmerEmailAndFilters(farmerEmail, entityStatus, entitySeason, pageable);
+        return com.smartagri.domain.dto.PageResponse.of(page, this::toDto);
     }
 
     @Override

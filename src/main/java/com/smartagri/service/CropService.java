@@ -17,7 +17,7 @@ public interface CropService {
     CropDto getCropById(Long id, String requesterEmail);
 
     /** All crops owned by the authenticated farmer. */
-    List<CropDto> getMyCrops(String farmerEmail);
+    com.smartagri.domain.dto.PageResponse<CropDto> getMyCrops(String farmerEmail, CropStatus status, com.smartagri.domain.enums.Season season, org.springframework.data.domain.Pageable pageable);
 
     /** All crops in the system (admin only). */
     List<CropDto> getAllCrops();

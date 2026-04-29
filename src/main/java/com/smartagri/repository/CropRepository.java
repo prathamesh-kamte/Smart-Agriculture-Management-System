@@ -34,4 +34,13 @@ public interface CropRepository extends JpaRepository<Crop, Long> {
 
     @Query("SELECT c.status, COUNT(c) FROM Crop c GROUP BY c.status")
     List<Object[]> countAllCropsByStatus();
+
+    @Query("SELECT c FROM Crop c WHERE c.farmer.email = :email " +
+           "AND (:status IS NULL OR c.status = :status) " +
+           "AND (:season IS NULL OR c.season = :season)")
+    org.springframework.data.domain.Page<Crop> findByFarmerEmailAndFilters(
+            @Param("email") String email,
+            @Param("status") CropStatus status,
+            @Param("season") com.smartagri.entity.Season season,
+            org.springframework.data.domain.Pageable pageable);
 }
