@@ -70,14 +70,9 @@ public class AdvisoryServiceImpl implements AdvisoryService {
     }
 
     @Override
-    public List<AdvisoryDto> getActiveAdvisories(String farmerEmail) {
-        User farmer = userRepository.findByEmail(farmerEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
-
-        List<Advisory> advisories = advisoryRepository.findByFarmerIdAndAcknowledgedFalse(farmer.getId());
-        return advisories.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public com.smartagri.domain.dto.PageResponse<AdvisoryDto> getActiveAdvisories(String farmerEmail, String severity, org.springframework.data.domain.Pageable pageable) {
+        org.springframework.data.domain.Page<Advisory> page = advisoryRepository.findActiveByFarmerEmailAndFilters(farmerEmail, severity, pageable);
+        return com.smartagri.domain.dto.PageResponse.of(page, this::mapToDto);
     }
 
     @Override

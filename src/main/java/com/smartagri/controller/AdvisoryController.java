@@ -31,9 +31,11 @@ public class AdvisoryController {
      */
     @GetMapping("/active")
     @Operation(summary = "Get active advisories")
-    public ResponseEntity<List<AdvisoryDto>> getActiveAdvisories(
+    public ResponseEntity<com.smartagri.domain.dto.PageResponse<AdvisoryDto>> getActiveAdvisories(
+            @RequestParam(required = false) String severity,
+            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(advisoryService.getActiveAdvisories(userDetails.getUsername()));
+        return ResponseEntity.ok(advisoryService.getActiveAdvisories(userDetails.getUsername(), severity, pageable));
     }
 
     /**

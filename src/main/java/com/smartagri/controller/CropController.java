@@ -46,9 +46,12 @@ public class CropController {
      */
     @GetMapping
     @Operation(summary = "Get my crops")
-    public ResponseEntity<List<CropDto>> getMyCrops(
+    public ResponseEntity<com.smartagri.domain.dto.PageResponse<CropDto>> getMyCrops(
+            @RequestParam(required = false) CropStatus status,
+            @RequestParam(required = false) com.smartagri.domain.enums.Season season,
+            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable,
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(cropService.getMyCrops(userDetails.getUsername()));
+        return ResponseEntity.ok(cropService.getMyCrops(userDetails.getUsername(), status, season, pageable));
     }
 
     /**
