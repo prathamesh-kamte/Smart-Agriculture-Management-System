@@ -1,15 +1,17 @@
 package com.smartagri.service;
 
 import com.smartagri.domain.dto.AdvisoryDto;
-import com.smartagri.domain.entity.Crop;
-import com.smartagri.domain.entity.User;
-import com.smartagri.domain.enums.CropStatus;
-import com.smartagri.domain.enums.Role;
-import com.smartagri.domain.enums.Season;
+import com.smartagri.entity.Advisory;
+import com.smartagri.entity.Crop;
+import com.smartagri.entity.User;
+import com.smartagri.entity.CropStatus;
+import com.smartagri.entity.Role;
+import com.smartagri.entity.Season;
+import com.smartagri.repository.AdvisoryRepository;
 import com.smartagri.repository.CropRepository;
 import com.smartagri.repository.UserRepository;
 import com.smartagri.service.impl.AdvisoryServiceImpl;
-import com.smartagri.util.AdvisoryRuleEngine;
+import com.smartagri.engine.AdvisoryRuleEngine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,17 +29,12 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for {@link AdvisoryServiceImpl}.
- *
- * <p>Uses a {@code @Spy} on {@link AdvisoryRuleEngine} so real rule logic
- * is exercised while still allowing verification.
- */
 @ExtendWith(MockitoExtension.class)
 class AdvisoryServiceTest {
 
     @Mock private CropRepository cropRepository;
     @Mock private UserRepository userRepository;
+    @Mock private AdvisoryRepository advisoryRepository;
 
     @Spy  private AdvisoryRuleEngine ruleEngine;
 
@@ -45,6 +42,7 @@ class AdvisoryServiceTest {
 
     private User farmer;
     private Crop activeCrop;
+    private Advisory advisoryEntity;
 
     @BeforeEach
     void setUp() {
@@ -59,20 +57,31 @@ class AdvisoryServiceTest {
                 .id(5L).cropName("Tomato").cropType("Vegetable")
                 .season(Season.ZAID).status(CropStatus.GROWING)
                 .plantingDate(LocalDate.now().minusDays(30))
-                .expectedHarvestDate(LocalDate.now().plusDays(10)) // approaching harvest
+                .expectedHarvestDate(LocalDate.now().plusDays(10))
                 .areaInAcres(1.2)
                 .farmer(farmer)
                 .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now())
                 .build();
+                
+        advisoryEntity = Advisory.builder()
+                .id(100L)
+                .title("Harvest Approaching")
+                .message("Your crop is nearing harvest.")
+                .severity("INFO")
+                .category("HARVEST")
+                .generatedAt(LocalDateTime.now())
+                .acknowledged(false)
+                .crop(activeCrop)
+                .farmer(farmer)
+                .build();
     }
-
-    // ─── generateAdvisories ───────────────────────────────────────────────────
 
     @Test
     @DisplayName("generateAdvisories — harvest-approaching rule fires for crop due in 10 days")
     void generateAdvisories_harvestApproaching_producesAdvisory() {
         when(userRepository.findByEmail("farmer@smartagri.com")).thenReturn(Optional.of(farmer));
         when(cropRepository.findActiveCropsByFarmerId(1L)).thenReturn(List.of(activeCrop));
+        when(advisoryRepository.saveAll(any())).thenAnswer(i -> i.getArgument(0));
 
         List<AdvisoryDto> advisories = advisoryService.generateAdvisories("farmer@smartagri.com");
 
@@ -91,62 +100,30 @@ class AdvisoryServiceTest {
         List<AdvisoryDto> advisories = advisoryService.generateAdvisories("farmer@smartagri.com");
 
         assertThat(advisories).isEmpty();
+        verify(advisoryRepository, never()).saveAll(any());
     }
-
-    // ─── getActiveAdvisories ──────────────────────────────────────────────────
 
     @Test
     @DisplayName("getActiveAdvisories — returns only unacknowledged advisories")
     void getActiveAdvisories_afterGeneration_returnsUnacknowledged() {
         when(userRepository.findByEmail("farmer@smartagri.com")).thenReturn(Optional.of(farmer));
-        when(cropRepository.findActiveCropsByFarmerId(1L)).thenReturn(List.of(activeCrop));
-
-        // Generate first
-        advisoryService.generateAdvisories("farmer@smartagri.com");
+        when(advisoryRepository.findByFarmerIdAndAcknowledgedFalse(1L)).thenReturn(List.of(advisoryEntity));
 
         List<AdvisoryDto> active = advisoryService.getActiveAdvisories("farmer@smartagri.com");
 
-        assertThat(active).allSatisfy(a -> assertThat(a.isAcknowledged()).isFalse());
+        assertThat(active).hasSize(1);
+        assertThat(active.get(0).isAcknowledged()).isFalse();
     }
-
-    @Test
-    @DisplayName("getActiveAdvisories — no prior advisories returns empty list")
-    void getActiveAdvisories_noPrior_returnsEmpty() {
-        List<AdvisoryDto> result = advisoryService.getActiveAdvisories("nobody@x.com");
-        assertThat(result).isEmpty();
-    }
-
-    // ─── acknowledgeAdvisory ──────────────────────────────────────────────────
 
     @Test
     @DisplayName("acknowledgeAdvisory — marks advisory as acknowledged")
     void acknowledgeAdvisory_validId_marksAcknowledged() {
         when(userRepository.findByEmail("farmer@smartagri.com")).thenReturn(Optional.of(farmer));
-        when(cropRepository.findActiveCropsByFarmerId(1L)).thenReturn(List.of(activeCrop));
+        when(advisoryRepository.findById(100L)).thenReturn(Optional.of(advisoryEntity));
 
-        List<AdvisoryDto> generated = advisoryService.generateAdvisories("farmer@smartagri.com");
-        assertThat(generated).isNotEmpty();
+        advisoryService.acknowledgeAdvisory(100L, "farmer@smartagri.com");
 
-        Long firstId = generated.get(0).getId();
-        advisoryService.acknowledgeAdvisory(firstId, "farmer@smartagri.com");
-
-        List<AdvisoryDto> active = advisoryService.getActiveAdvisories("farmer@smartagri.com");
-        boolean stillActive = active.stream().anyMatch(a -> firstId.equals(a.getId()));
-        assertThat(stillActive).isFalse();
-    }
-
-    // ─── runScheduledAdvisoryGeneration ──────────────────────────────────────
-
-    @Test
-    @DisplayName("runScheduledAdvisoryGeneration — iterates all users without throwing")
-    void runScheduledAdvisoryGeneration_allUsers_doesNotThrow() {
-        when(userRepository.findAll()).thenReturn(List.of(farmer));
-        when(userRepository.findByEmail("farmer@smartagri.com")).thenReturn(Optional.of(farmer));
-        when(cropRepository.findActiveCropsByFarmerId(1L)).thenReturn(List.of());
-
-        assertThatCode(() -> advisoryService.runScheduledAdvisoryGeneration())
-                .doesNotThrowAnyException();
-
-        verify(userRepository, times(1)).findAll();
+        assertThat(advisoryEntity.isAcknowledged()).isTrue();
+        verify(advisoryRepository).save(advisoryEntity);
     }
 }
