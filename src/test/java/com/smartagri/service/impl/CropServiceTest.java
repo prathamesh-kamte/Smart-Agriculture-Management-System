@@ -2,8 +2,8 @@ package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.CropDto;
 import com.smartagri.domain.enums.Role;
-import com.smartagri.entity.Crop;
-import com.smartagri.entity.User;
+import com.smartagri.domain.entity.Crop;
+import com.smartagri.domain.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
 import com.smartagri.exception.UnauthorizedException;
 import com.smartagri.repository.CropRepository;
@@ -57,7 +57,7 @@ public class CropServiceTest {
                 .id(10L)
                 .cropName("Wheat")
                 .farmer(farmer)
-                .status(com.smartagri.entity.CropStatus.PLANTED)
+                .status(com.smartagri.domain.enums.CropStatus.PLANTED)
                 .build();
     }
 
@@ -125,7 +125,7 @@ public class CropServiceTest {
                 .id(10L)
                 .cropName("Wheat")
                 .farmer(farmer)
-                .status(com.smartagri.entity.CropStatus.GROWING)
+                .status(com.smartagri.domain.enums.CropStatus.GROWING)
                 .build();
                 
         when(cropRepository.save(any(Crop.class))).thenReturn(updatedCrop);

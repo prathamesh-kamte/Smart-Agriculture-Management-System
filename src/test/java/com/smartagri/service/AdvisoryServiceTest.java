@@ -2,11 +2,11 @@ package com.smartagri.service;
 
 import com.smartagri.domain.dto.AdvisoryDto;
 import com.smartagri.entity.Advisory;
-import com.smartagri.entity.Crop;
-import com.smartagri.entity.User;
-import com.smartagri.entity.CropStatus;
-import com.smartagri.entity.Role;
-import com.smartagri.entity.Season;
+import com.smartagri.domain.entity.Crop;
+import com.smartagri.domain.entity.User;
+import com.smartagri.domain.enums.CropStatus;
+import com.smartagri.domain.enums.Role;
+import com.smartagri.domain.enums.Season;
 import com.smartagri.repository.AdvisoryRepository;
 import com.smartagri.repository.CropRepository;
 import com.smartagri.repository.UserRepository;

@@ -48,7 +48,7 @@ public class Expense {
     private Crop crop;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recorded_by", nullable = false)
+    @JoinColumn(name = "recorded_by_id", nullable = false)
     private User recordedBy;
 
     // ─── Audit ───────────────────────────────────────────────────────────────

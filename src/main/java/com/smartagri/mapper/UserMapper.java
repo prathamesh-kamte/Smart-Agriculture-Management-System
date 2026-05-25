@@ -1,7 +1,7 @@
 package com.smartagri.mapper;
 
 import com.smartagri.domain.dto.UserDto;
-import com.smartagri.entity.User;
+import com.smartagri.domain.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

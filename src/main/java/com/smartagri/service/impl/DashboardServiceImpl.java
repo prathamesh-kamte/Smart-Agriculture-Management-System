@@ -2,8 +2,8 @@ package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.DashboardStatsDto;
 import com.smartagri.domain.dto.MonthlyExpenseTrendDto;
-import com.smartagri.entity.CropStatus;
-import com.smartagri.entity.User;
+import com.smartagri.domain.enums.CropStatus;
+import com.smartagri.domain.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
 import com.smartagri.repository.AdvisoryRepository;
 import com.smartagri.repository.CropRepository;

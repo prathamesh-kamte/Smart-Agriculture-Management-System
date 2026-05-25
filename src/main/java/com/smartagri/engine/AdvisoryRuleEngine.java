@@ -1,8 +1,8 @@
 package com.smartagri.engine;
 
 import com.smartagri.domain.dto.AdvisoryDto;
-import com.smartagri.entity.Crop;
-import com.smartagri.entity.CropStatus;
+import com.smartagri.domain.entity.Crop;
+import com.smartagri.domain.enums.CropStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
