@@ -14,7 +14,4 @@ if "%JAVA_HOME%"=="" (
     exit /b 1
 )
 
-"%JAVA_HOME%\bin\java" ^
-  -classpath "%MAVEN_WRAPPER_JAR%" ^
-  org.apache.maven.wrapper.MavenWrapperMain ^
-  %*
+"%JAVA_HOME%\bin\java" -Dmaven.multiModuleProjectDirectory="%CD%" -classpath "%MAVEN_WRAPPER_JAR%" org.apache.maven.wrapper.MavenWrapperMain %*
