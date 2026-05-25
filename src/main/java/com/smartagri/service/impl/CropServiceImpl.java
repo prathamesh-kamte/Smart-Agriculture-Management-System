@@ -2,8 +2,9 @@ package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.CropDto;
 import com.smartagri.domain.enums.CropStatus;
-import com.smartagri.entity.Crop;
-import com.smartagri.entity.User;
+import com.smartagri.domain.enums.Season;
+import com.smartagri.domain.entity.Crop;
+import com.smartagri.domain.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
 import com.smartagri.exception.UnauthorizedException;
 import com.smartagri.repository.CropRepository;
@@ -34,8 +35,8 @@ public class CropServiceImpl implements CropService {
         Crop crop = Crop.builder()
                 .cropName(dto.getCropName())
                 .cropType(dto.getCropType())
-                .season(dto.getSeason() != null ? com.smartagri.entity.Season.valueOf(dto.getSeason().name()) : null)
-                .status(dto.getStatus() != null ? com.smartagri.entity.CropStatus.valueOf(dto.getStatus().name()) : com.smartagri.entity.CropStatus.PLANTED)
+                .season(dto.getSeason())
+                .status(dto.getStatus() != null ? dto.getStatus() : CropStatus.PLANTED)
                 .plantingDate(dto.getPlantingDate())
                 .expectedHarvestDate(dto.getExpectedHarvestDate())
                 .areaInAcres(dto.getAreaInAcres())
@@ -57,9 +58,7 @@ public class CropServiceImpl implements CropService {
 
     @Override
     public com.smartagri.domain.dto.PageResponse<CropDto> getMyCrops(String farmerEmail, CropStatus status, com.smartagri.domain.enums.Season season, org.springframework.data.domain.Pageable pageable) {
-        com.smartagri.entity.CropStatus entityStatus = status != null ? com.smartagri.entity.CropStatus.valueOf(status.name()) : null;
-        com.smartagri.entity.Season entitySeason = season != null ? com.smartagri.entity.Season.valueOf(season.name()) : null;
-        org.springframework.data.domain.Page<Crop> page = cropRepository.findByFarmerEmailAndFilters(farmerEmail, entityStatus, entitySeason, pageable);
+        org.springframework.data.domain.Page<Crop> page = cropRepository.findByFarmerEmailAndFilters(farmerEmail, status, season, pageable);
         return com.smartagri.domain.dto.PageResponse.of(page, this::toDto);
     }
 
@@ -79,7 +78,7 @@ public class CropServiceImpl implements CropService {
         crop.setCropName(dto.getCropName());
         crop.setCropType(dto.getCropType());
         if (dto.getSeason() != null) {
-            crop.setSeason(com.smartagri.entity.Season.valueOf(dto.getSeason().name()));
+            crop.setSeason(dto.getSeason());
         }
         crop.setPlantingDate(dto.getPlantingDate());
         crop.setExpectedHarvestDate(dto.getExpectedHarvestDate());
@@ -95,7 +94,7 @@ public class CropServiceImpl implements CropService {
     public CropDto updateCropStatus(Long id, CropStatus newStatus, String requesterEmail) {
         Crop crop = findCropOrThrow(id);
         assertOwnerOrAdmin(crop, requesterEmail);
-        crop.setStatus(com.smartagri.entity.CropStatus.valueOf(newStatus.name()));
+        crop.setStatus(newStatus);
         log.info("Crop id={} status updated to {} by {}", id, newStatus, requesterEmail);
         return toDto(cropRepository.save(crop));
     }
@@ -133,11 +132,9 @@ public class CropServiceImpl implements CropService {
         dto.setId(crop.getId());
         dto.setCropName(crop.getCropName());
         dto.setCropType(crop.getCropType());
-        if (crop.getSeason() != null) {
-            dto.setSeason(com.smartagri.domain.enums.Season.valueOf(crop.getSeason().name()));
-        }
+        dto.setSeason(crop.getSeason());
         if (crop.getStatus() != null) {
-            dto.setStatus(com.smartagri.domain.enums.CropStatus.valueOf(crop.getStatus().name()));
+            dto.setStatus(crop.getStatus());
         }
         dto.setPlantingDate(crop.getPlantingDate());
         dto.setExpectedHarvestDate(crop.getExpectedHarvestDate());

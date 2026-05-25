@@ -1,5 +1,7 @@
 package com.smartagri.entity;
 
+import com.smartagri.domain.entity.Crop;
+import com.smartagri.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 

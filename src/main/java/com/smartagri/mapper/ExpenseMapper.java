@@ -1,7 +1,7 @@
 package com.smartagri.mapper;
 
 import com.smartagri.domain.dto.ExpenseDto;
-import com.smartagri.entity.Expense;
+import com.smartagri.domain.entity.Expense;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
