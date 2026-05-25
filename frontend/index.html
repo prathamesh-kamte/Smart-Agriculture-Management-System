@@ -2,12 +2,559 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Smart Agriculture Management System | Binance Design</title>
   </head>
   <body>
-    <div id="app"></div>
+    <!-- App Container -->
+    <div id="app">
+      <!-- Loader Overlay -->
+      <div id="app-loader" class="loader-container" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--colors-canvas-dark); z-index: 9999;">
+        <div class="loader"></div>
+      </div>
+
+      <!-- 1. Authentication View -->
+      <div id="view-auth" class="auth-wrapper" style="display: none;">
+        <div class="auth-card">
+          <div class="auth-logo">
+            <h1>
+              <!-- Binance inspired custom agricultural diamond logo -->
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" style="color: var(--colors-primary);">
+                <path d="M12 2L4 10l2 2 6-6 6 6 2-2-8-8zM4 14l8 8 8-8-2-2-6 6-6-6-2 2z"/>
+              </svg>
+              SmartAgri
+            </h1>
+            <p style="color: var(--colors-muted); font-size: 0.85rem; margin-top: 0.4rem; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600;">Next-Gen Farming Ecosystem</p>
+          </div>
+          
+          <!-- Login Form -->
+          <div id="auth-login-section">
+            <h2 style="font-weight: 700; margin-bottom: 0.25rem; font-size: 1.5rem; color: var(--colors-on-dark);">Sign In</h2>
+            <p class="auth-subtitle">Access your crop ledger, expenses, and AI advisories.</p>
+            <form id="form-login">
+              <div class="form-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" class="form-input" placeholder="farmer@smartagri.com" required autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+                Log In
+              </button>
+            </form>
+            <div class="auth-footer">
+              New to the platform? <a href="#" id="link-to-register">Register as a Farmer</a>
+            </div>
+          </div>
+
+          <!-- Register Form -->
+          <div id="auth-register-section" style="display: none;">
+            <h2 style="font-weight: 700; margin-bottom: 0.25rem; font-size: 1.5rem; color: var(--colors-on-dark);">Create Account</h2>
+            <p class="auth-subtitle">Get started with our smart farming management system.</p>
+            <form id="form-register">
+              <div class="form-group">
+                <label for="register-name">Full Name</label>
+                <input type="text" id="register-name" class="form-input" placeholder="John Doe" required autocomplete="name">
+              </div>
+              <div class="form-group">
+                <label for="register-email">Email Address</label>
+                <input type="email" id="register-email" class="form-input" placeholder="john.doe@example.com" required autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" class="form-input" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password">
+              </div>
+              <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+                Create Account
+              </button>
+            </form>
+            <div class="auth-footer">
+              Already have an account? <a href="#" id="link-to-login">Sign In</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Main Dashboard Layout -->
+      <div id="view-app" class="app-layout" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar">
+          <div class="sidebar-header">
+            <div class="sidebar-logo">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color: var(--colors-primary);">
+                <path d="M12 2L4 10l2 2 6-6 6 6 2-2-8-8zM4 14l8 8 8-8-2-2-6 6-6-6-2 2z"/>
+              </svg>
+              SmartAgri
+            </div>
+          </div>
+          
+          <ul class="sidebar-menu">
+            <li class="sidebar-item">
+              <div class="sidebar-link active" data-panel="dashboard">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                Dashboard
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="crops">
+                <svg viewBox="0 0 24 24"><path d="M17 8C19.2 8 21 9.8 21 12C21 14.2 19.2 16 17 16H13V18H17C20.3 18 23 15.3 23 12C23 8.7 20.3 6 17 6H13V8H17ZM10 10H14V14H10V10ZM11 16H7C4.8 16 3 14.2 3 12C3 9.8 4.8 8 7 8H11V6H7C3.7 6 1 8.7 1 12C1 15.3 3.7 18 7 18H11V16Z"/></svg>
+                Crops Inventory
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="expenses">
+                <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                Expenses
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="advisories">
+                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                Advisories <span id="advisory-badge-count" style="background: var(--colors-trading-down); color: white; border-radius: var(--rounded-xs); font-size: 0.7rem; padding: 0.05rem 0.35rem; margin-left: auto; display: none; font-family: var(--font-mono); font-weight: 700;">0</span>
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="profile">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                Profile
+              </div>
+            </li>
+          </ul>
+
+          <div class="sidebar-footer">
+            <div class="user-profile-badge">
+              <div class="user-avatar" id="avatar-letters">US</div>
+              <div class="user-details">
+                <div class="user-name" id="display-user-name">User Name</div>
+                <div class="user-role" id="display-user-role">FARMER</div>
+              </div>
+            </div>
+            <button class="btn-logout" id="btn-logout-sidebar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              Sign Out
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+          
+          <div class="panel-content-wrapper">
+            <!-- DASHBOARD PANEL -->
+            <section id="panel-dashboard" class="app-panel active">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Market & Farm Overview</h2>
+                  <p class="page-subtitle">Real-time agricultural statistics, resource investments, and rule advisories.</p>
+                </div>
+                <div class="flex gap-1">
+                  <button class="btn-secondary" id="btn-quick-generate-adv">
+                    Run Advisory Engine
+                  </button>
+                  <button class="btn-primary" id="btn-quick-add-crop">
+                    Add Crop Plot
+                  </button>
+                </div>
+              </div>
+
+              <!-- Stats Metrics Grid (Binance Style Stat Callouts) -->
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-label">Total Crop Plots</div>
+                  <div class="stat-value binance-plex" id="stat-total-crops">-</div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-label">Active Plots</div>
+                  <div class="stat-value binance-plex" id="stat-active-crops" style="color: var(--colors-trading-up);">-</div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-label">Monthly Expenses</div>
+                  <div class="stat-value binance-plex" id="stat-monthly-expenses">-</div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-label">Pending Advisories</div>
+                  <div class="stat-value binance-plex" id="stat-pending-advisories" style="color: var(--colors-trading-down);">-</div>
+                </div>
+              </div>
+
+              <!-- Dashboard Visual Layout (Chart + Sidebar Rail) -->
+              <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                <!-- Expense Trends -->
+                <div class="elevated-container">
+                  <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark); margin-bottom: 0.25rem;">Monthly Expense Trends</h3>
+                  <p style="color: var(--colors-muted); font-size: 0.85rem;">Investment performance ledger breakdown.</p>
+                  <div class="chart-container" id="expense-chart-wrapper" style="border: none; padding: 0;">
+                    <!-- SVG Chart will be injected here -->
+                  </div>
+                </div>
+
+                <!-- Quick Active Advisories -->
+                <div class="elevated-container">
+                  <div class="flex justify-between align-center" style="margin-bottom: 0.25rem;">
+                    <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark);">Critical Notifications</h3>
+                    <a href="#" id="view-all-advisories-link" style="font-size: 0.85rem; font-weight: 600; color: var(--colors-primary);">View All</a>
+                  </div>
+                  <p style="color: var(--colors-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Automated security & maintenance guidelines.</p>
+                  
+                  <div id="quick-advisories-list" class="flex flex-col gap-1">
+                    <!-- Injected by JS -->
+                    <div style="color: var(--colors-muted); text-align: center; padding: 2rem 0; font-size: 0.9rem;">No active advisory logs.</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- CROPS PANEL -->
+            <section id="panel-crops" class="app-panel">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Crops Ledger</h2>
+                  <p class="page-subtitle">Configure agricultural assets, track seeding dates, and transition lifecycle states.</p>
+                </div>
+                <button class="btn-primary" id="btn-add-crop">Add Crop Plot</button>
+              </div>
+
+              <div class="filters-bar">
+                <select id="filter-crop-status" class="filter-select">
+                  <option value="">All Statuses</option>
+                  <option value="PLANTED">Planted</option>
+                  <option value="GROWING">Growing</option>
+                  <option value="READY_FOR_HARVEST">Ready for Harvest</option>
+                  <option value="HARVESTED">Harvested</option>
+                  <option value="FAILED">Failed</option>
+                </select>
+                
+                <select id="filter-crop-season" class="filter-select">
+                  <option value="">All Seasons</option>
+                  <option value="KHARIF">Kharif (Monsoon)</option>
+                  <option value="RABI">Rabi (Winter)</option>
+                  <option value="ZAID">Zaid (Summer)</option>
+                  <option value="PERENNIAL">Perennial</option>
+                </select>
+              </div>
+
+              <div id="crops-loading" class="loader-container" style="display: none;">
+                <div class="loader"></div>
+              </div>
+              
+              <div id="crops-container" class="crops-grid">
+                <!-- Injected by JS -->
+              </div>
+            </section>
+
+            <!-- EXPENSES PANEL -->
+            <section id="panel-expenses" class="app-panel">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Capital Investments</h2>
+                  <p class="page-subtitle">Log seeds, labor costs, fertilizers, and maintenance expenses.</p>
+                </div>
+                <button class="btn-primary" id="btn-add-expense">Log Expense</button>
+              </div>
+
+              <div class="expense-layout">
+                <!-- Expense List Card -->
+                <div class="elevated-container" style="overflow: hidden;">
+                  <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark); margin-bottom: 1.25rem;">Transaction Ledger</h3>
+                  
+                  <div class="filters-bar" style="margin-bottom: 1.25rem;">
+                    <select id="filter-expense-category" class="filter-select">
+                      <option value="">All Categories</option>
+                      <option value="SEEDING">Seeding</option>
+                      <option value="FERTILISATION">Fertilisation</option>
+                      <option value="IRRIGATION">Irrigation</option>
+                      <option value="PEST_CONTROL">Pest Control</option>
+                      <option value="LABOUR">Labour</option>
+                      <option value="HARVESTING">Harvesting</option>
+                      <option value="MAINTENANCE">Maintenance</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+
+                  <div id="expenses-table-wrapper" class="expense-table-container">
+                    <table class="expense-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Description</th>
+                          <th>Crop Plot</th>
+                          <th>Category</th>
+                          <th>Amount</th>
+                          <th style="text-align: right;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="expenses-tbody">
+                        <!-- Injected by JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Crop Summary Breakdown Card -->
+                <div class="elevated-container" style="height: fit-content;">
+                  <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark); margin-bottom: 0.25rem;">Plot Allocations</h3>
+                  <p style="color: var(--colors-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">Accumulated investments per crop plot.</p>
+                  <div id="expenses-crop-summary-list" class="flex flex-col gap-1">
+                    <!-- Injected by JS -->
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ADVISORIES PANEL -->
+            <section id="panel-advisories" class="app-panel">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Rule Advisory Engine</h2>
+                  <p class="page-subtitle">Actionable parameters generated by security, weather, and harvesting metrics.</p>
+                </div>
+                <button class="btn-primary" id="btn-generate-advisories">
+                  Re-run Rule Engine
+                </button>
+              </div>
+
+              <div class="filters-bar">
+                <select id="filter-advisory-severity" class="filter-select">
+                  <option value="">All Severities</option>
+                  <option value="INFO">Info</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="CRITICAL">Critical</option>
+                </select>
+              </div>
+
+              <div id="advisories-container" class="advisories-grid">
+                <!-- Injected by JS -->
+              </div>
+            </section>
+
+            <!-- PROFILE PANEL -->
+            <section id="panel-profile" class="app-panel">
+              <div class="page-header">
+                <h2 class="page-title">Farmer Profile</h2>
+                <p class="page-subtitle">Configure credentials and verified roles.</p>
+              </div>
+
+              <div class="elevated-container" style="max-width: 600px;">
+                <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark); margin-bottom: 1.5rem;">Verified Credentials</h3>
+                <form id="form-profile">
+                  <div class="form-group">
+                    <label for="profile-name">Full Name</label>
+                    <input type="text" id="profile-name" class="form-input" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="profile-email">Registered Email</label>
+                    <input type="email" id="profile-email" class="form-input" readonly style="opacity: 0.5; cursor: not-allowed; background-color: var(--colors-canvas-dark);">
+                    <span style="font-size: 0.75rem; color: var(--colors-muted);">Email address cannot be changed.</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Verified Role</label>
+                    <input type="text" id="profile-role" class="form-input" readonly style="opacity: 0.5; cursor: not-allowed; background-color: var(--colors-canvas-dark);">
+                  </div>
+                  
+                  <button type="submit" class="btn-primary" style="margin-top: 1rem;">
+                    Save Profile
+                  </button>
+                </form>
+              </div>
+            </section>
+          </div>
+
+          <!-- Iconic Inverted Light Footer -->
+          <footer class="binance-footer">
+            <div class="footer-grid">
+              <div class="footer-col">
+                <h4>About SmartAgri</h4>
+                <ul>
+                  <li><a href="#">Whitepaper</a></li>
+                  <li><a href="#">Security Protocol</a></li>
+                  <li><a href="#">SAFU Fund</a></li>
+                  <li><a href="#">Community Forum</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Products</h4>
+                <ul>
+                  <li><a href="#">Crop Insurance</a></li>
+                  <li><a href="#">Yield Futures</a></li>
+                  <li><a href="#">Advisory Feed</a></li>
+                  <li><a href="#">Micro-Loans</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                  <li><a href="#">Developer API</a></li>
+                  <li><a href="#">Rule Documentation</a></li>
+                  <li><a href="#">FAQ Accordion</a></li>
+                  <li><a href="#">Submit Ticket</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Ecosystem</h4>
+                <ul>
+                  <li><a href="#">Smart Nodes</a></li>
+                  <li><a href="#">Oracle Feed</a></li>
+                  <li><a href="#">Token Economy</a></li>
+                  <li><a href="#">Audits</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="footer-bottom">
+              <p>&copy; 2026 SmartAgri Ecosystem. All funds are SAFU. Managed on the decentralized blockchain oracle system.</p>
+            </div>
+          </footer>
+        </main>
+      </div>
+
+      <!-- --- MODAL POPUPS --- -->
+
+      <!-- A. Crop Modal (Add / Edit) -->
+      <div id="modal-crop" class="modal-overlay">
+        <div class="modal-content">
+          <button class="modal-close" data-close>&times;</button>
+          <div class="modal-header">
+            <h3 class="modal-title" id="crop-modal-title">Configure Crop Plot</h3>
+          </div>
+          <form id="form-crop">
+            <input type="hidden" id="crop-id-field">
+            
+            <div class="form-group">
+              <label for="crop-name">Crop Name</label>
+              <input type="text" id="crop-name" class="form-input" placeholder="e.g., Basmati Rice" required>
+            </div>
+
+            <div class="form-group">
+              <label for="crop-type">Crop Type</label>
+              <input type="text" id="crop-type" class="form-input" placeholder="e.g., Cereal, Vegetable" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="crop-season">Season</label>
+                <select id="crop-season" class="filter-select" style="width:100%; height:40px;" required>
+                  <option value="KHARIF">Kharif (Monsoon)</option>
+                  <option value="RABI">Rabi (Winter)</option>
+                  <option value="ZAID">Zaid (Summer)</option>
+                  <option value="PERENNIAL">Perennial (All-Year)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="crop-area">Plot Area (Acres)</label>
+                <input type="number" id="crop-area" class="form-input" step="0.01" min="0.01" placeholder="e.g., 2.50" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="crop-planting-date">Planting Date</label>
+                <input type="date" id="crop-planting-date" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label for="crop-harvest-date">Expected Harvest</label>
+                <input type="date" id="crop-harvest-date" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-group" id="crop-status-field-group" style="display: none;">
+              <label for="crop-status">Status</label>
+              <select id="crop-status" class="filter-select" style="width:100%; height:40px;">
+                <option value="PLANTED">Planted</option>
+                <option value="GROWING">Growing</option>
+                <option value="READY_FOR_HARVEST">Ready For Harvest</option>
+                <option value="HARVESTED">Harvested</option>
+                <option value="FAILED">Failed</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="crop-notes">Additional Notes</label>
+              <textarea id="crop-notes" class="form-input" rows="3" placeholder="Irrigation details, soil conditions..." style="height: auto;"></textarea>
+            </div>
+
+            <div class="modal-buttons">
+              <button type="button" class="btn-secondary" data-close>Cancel</button>
+              <button type="submit" class="btn-primary" id="btn-save-crop">Confirm Order</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- B. Expense Modal (Add / Edit) -->
+      <div id="modal-expense" class="modal-overlay">
+        <div class="modal-content">
+          <button class="modal-close" data-close>&times;</button>
+          <div class="modal-header">
+            <h3 class="modal-title" id="expense-modal-title">Log Capital Investment</h3>
+          </div>
+          <form id="form-expense">
+            <input type="hidden" id="expense-id-field">
+            
+            <div class="form-group">
+              <label for="expense-crop-select">Associated Crop Plot</label>
+              <select id="expense-crop-select" class="filter-select" style="width: 100%; height: 40px;" required>
+                <option value="" disabled selected>Select plot...</option>
+                <!-- Filled dynamically by JS -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="expense-desc">Investment Description</label>
+              <input type="text" id="expense-desc" class="form-input" placeholder="e.g., NPK Fertiliser - 50kg" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="expense-category">Category</label>
+                <select id="expense-category" class="filter-select" style="width:100%; height:40px;" required>
+                  <option value="SEEDING">Seeding</option>
+                  <option value="FERTILISATION">Fertilisation</option>
+                  <option value="IRRIGATION">Irrigation</option>
+                  <option value="PEST_CONTROL">Pest Control</option>
+                  <option value="LABOUR">Labour</option>
+                  <option value="HARVESTING">Harvesting</option>
+                  <option value="MAINTENANCE">Maintenance</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="expense-amount">Amount ($)</label>
+                <input type="number" id="expense-amount" class="form-input" step="0.01" min="0.01" placeholder="e.g. 450.00" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="expense-date">Expense Date</label>
+              <input type="date" id="expense-date" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label for="expense-receipt">Receipt/Invoice Ref (Optional)</label>
+              <input type="text" id="expense-receipt" class="form-input" placeholder="e.g. INV-108272">
+            </div>
+
+            <div class="modal-buttons">
+              <button type="button" class="btn-secondary" data-close>Cancel</button>
+              <button type="submit" class="btn-primary" id="btn-save-expense">Confirm Log</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <!-- Script Entrypoint -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

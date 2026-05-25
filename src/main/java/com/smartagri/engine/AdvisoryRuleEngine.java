@@ -3,6 +3,7 @@ package com.smartagri.engine;
 import com.smartagri.domain.dto.AdvisoryDto;
 import com.smartagri.domain.entity.Crop;
 import com.smartagri.domain.enums.CropStatus;
+import com.smartagri.domain.enums.Season;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -27,6 +28,11 @@ public class AdvisoryRuleEngine {
         checkIrrigationDue(crop, daysSincePlanting).ifPresent(advisories::add);
         checkYoungCropFertilisation(crop, daysSincePlanting).ifPresent(advisories::add);
         checkFailedCrop(crop).ifPresent(advisories::add);
+        
+        checkSoilMoistureAlert(crop, daysSincePlanting).ifPresent(advisories::add);
+        checkPestSeasonAlert(crop, daysSincePlanting).ifPresent(advisories::add);
+        checkReadyForHarvestReminder(crop).ifPresent(advisories::add);
+        checkGrowthMilestone(crop, daysSincePlanting).ifPresent(advisories::add);
 
         return advisories;
     }
@@ -103,6 +109,62 @@ public class AdvisoryRuleEngine {
                     .message(String.format("%s has failed. Please conduct a post-mortem and review pest control strategies.", crop.getCropName()))
                     .severity("CRITICAL")
                     .category("PEST_CONTROL")
+                    .build());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<AdvisoryDto> checkSoilMoistureAlert(Crop crop, long daysSincePlanting) {
+        if (daysSincePlanting % 3 == 0 && (crop.getStatus() == CropStatus.PLANTED || crop.getStatus() == CropStatus.GROWING)) {
+            return Optional.of(AdvisoryDto.builder()
+                    .cropId(crop.getId())
+                    .cropName(crop.getCropName())
+                    .title("Soil Moisture Check")
+                    .message(String.format("Soil moisture check due for %s", crop.getCropName()))
+                    .severity("INFO")
+                    .category("IRRIGATION")
+                    .build());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<AdvisoryDto> checkPestSeasonAlert(Crop crop, long daysSincePlanting) {
+        if (crop.getSeason() == Season.KHARIF && crop.getStatus() == CropStatus.GROWING && daysSincePlanting >= 30 && daysSincePlanting <= 60) {
+            return Optional.of(AdvisoryDto.builder()
+                    .cropId(crop.getId())
+                    .cropName(crop.getCropName())
+                    .title("Pest Season Warning")
+                    .message(String.format("Peak pest season for KHARIF crops - inspect %s for signs of infestation", crop.getCropName()))
+                    .severity("WARNING")
+                    .category("PEST_CONTROL")
+                    .build());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<AdvisoryDto> checkReadyForHarvestReminder(Crop crop) {
+        if (crop.getStatus() == CropStatus.READY_FOR_HARVEST && crop.getActualHarvestDate() == null) {
+            return Optional.of(AdvisoryDto.builder()
+                    .cropId(crop.getId())
+                    .cropName(crop.getCropName())
+                    .title("Harvest Reminder")
+                    .message(String.format("Crop %s is marked ready but not yet harvested - quality may deteriorate", crop.getCropName()))
+                    .severity("CRITICAL")
+                    .category("HARVEST")
+                    .build());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<AdvisoryDto> checkGrowthMilestone(Crop crop, long daysSincePlanting) {
+        if (daysSincePlanting == 30 && crop.getStatus() == CropStatus.GROWING) {
+            return Optional.of(AdvisoryDto.builder()
+                    .cropId(crop.getId())
+                    .cropName(crop.getCropName())
+                    .title("Growth Milestone")
+                    .message(String.format("%s has reached 30-day growth milestone - consider top dressing fertiliser", crop.getCropName()))
+                    .severity("INFO")
+                    .category("FERTILISATION")
                     .build());
         }
         return Optional.empty();
