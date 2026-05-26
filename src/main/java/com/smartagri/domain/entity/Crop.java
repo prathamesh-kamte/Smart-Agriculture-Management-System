@@ -5,6 +5,7 @@ import com.smartagri.domain.enums.Season;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,6 +58,20 @@ public class Crop {
     /** Free-form notes about the crop. */
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    // ─── Yield tracking ──────────────────────────────────────────────────────
+
+    /** Estimated yield in kilograms at planting time. */
+    @Column(name = "expected_yield_kg")
+    private Double expectedYieldKg;
+
+    /** Actual yield in kilograms recorded at harvest. */
+    @Column(name = "actual_yield_kg")
+    private Double actualYieldKg;
+
+    /** Selling price per kilogram (stored as DECIMAL(10,2)). */
+    @Column(name = "selling_price_per_kg", precision = 10, scale = 2)
+    private BigDecimal sellingPricePerKg;
 
     // ─── Relationships ───────────────────────────────────────────────────────
 
