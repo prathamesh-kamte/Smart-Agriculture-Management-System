@@ -22,7 +22,8 @@ public class CropAdvisoryScheduler {
 
     /**
      * Daily advisory generation at 07:00 every morning.
-     * Evaluates every active crop across all farmers.
+     * Evaluates every active crop across all farmers using both the rule engine
+     * and live weather conditions.
      */
     @Scheduled(cron = "0 0 7 * * *")
     public void generateDailyAdvisories() {
