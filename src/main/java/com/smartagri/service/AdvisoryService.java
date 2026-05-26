@@ -42,4 +42,20 @@ public interface AdvisoryService {
      * Admin-only: generate and persist irrigation advisories for all active crops.
      */
     void runScheduledIrrigationAdvisories();
+
+    /**
+     * Generate and persist weather-aware advisories for the given farmer based
+     * on live conditions fetched from the weather service.
+     *
+     * <ul>
+     *   <li>Rainy  → INFO for all GROWING crops (skip irrigation)</li>
+     *   <li>Frosty → CRITICAL for PLANTED and GROWING crops (frost protection)</li>
+     *   <li>Temp &gt; 40 °C → WARNING for all active crops (extreme heat)</li>
+     * </ul>
+     *
+     * <p>Silently no-ops if the weather service is unavailable.
+     *
+     * @param farmerEmail authenticated farmer's email
+     */
+    void generateWeatherAdvisories(String farmerEmail);
 }
