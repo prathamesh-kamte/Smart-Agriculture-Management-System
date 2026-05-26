@@ -8,6 +8,7 @@ import com.smartagri.domain.entity.User;
 import com.smartagri.exception.ResourceNotFoundException;
 import com.smartagri.exception.UnauthorizedException;
 import com.smartagri.repository.CropRepository;
+import com.smartagri.repository.ExpenseRepository;
 import com.smartagri.repository.UserRepository;
 import com.smartagri.service.CropService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,7 @@ public class CropServiceImpl implements CropService {
 
     private final CropRepository cropRepository;
     private final UserRepository userRepository;
+    private final ExpenseRepository expenseRepository;
 
     @Override
     @Transactional
@@ -41,6 +44,9 @@ public class CropServiceImpl implements CropService {
                 .expectedHarvestDate(dto.getExpectedHarvestDate())
                 .areaInAcres(dto.getAreaInAcres())
                 .notes(dto.getNotes())
+                .expectedYieldKg(dto.getExpectedYieldKg())
+                .actualYieldKg(dto.getActualYieldKg())
+                .sellingPricePerKg(dto.getSellingPricePerKg())
                 .farmer(farmer)
                 .build();
 
@@ -85,6 +91,10 @@ public class CropServiceImpl implements CropService {
         crop.setActualHarvestDate(dto.getActualHarvestDate());
         crop.setAreaInAcres(dto.getAreaInAcres());
         crop.setNotes(dto.getNotes());
+        // Yield tracking fields
+        crop.setExpectedYieldKg(dto.getExpectedYieldKg());
+        crop.setActualYieldKg(dto.getActualYieldKg());
+        crop.setSellingPricePerKg(dto.getSellingPricePerKg());
 
         return toDto(cropRepository.save(crop));
     }
@@ -141,6 +151,25 @@ public class CropServiceImpl implements CropService {
         dto.setActualHarvestDate(crop.getActualHarvestDate());
         dto.setAreaInAcres(crop.getAreaInAcres());
         dto.setNotes(crop.getNotes());
+
+        // ── Yield fields ─────────────────────────────────────────────
+        dto.setExpectedYieldKg(crop.getExpectedYieldKg());
+        dto.setActualYieldKg(crop.getActualYieldKg());
+        dto.setSellingPricePerKg(crop.getSellingPricePerKg());
+
+        // ── Profit / loss calculation ─────────────────────────────────
+        // Requires all three fields; null-safe — returns null when any is absent.
+        if (crop.getActualYieldKg() != null
+                && crop.getSellingPricePerKg() != null
+                && crop.getId() != null) {
+            BigDecimal revenue = BigDecimal.valueOf(crop.getActualYieldKg())
+                    .multiply(crop.getSellingPricePerKg());
+            BigDecimal totalExpenses = expenseRepository.sumByCropId(crop.getId());
+            dto.setProfitLoss(revenue.subtract(totalExpenses));
+        } else {
+            dto.setProfitLoss(null);
+        }
+
         if (crop.getFarmer() != null) {
             dto.setFarmerId(crop.getFarmer().getId());
             dto.setFarmerName(crop.getFarmer().getFullName());
