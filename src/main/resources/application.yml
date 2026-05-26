@@ -18,3 +18,7 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET:8a3c9b745e1f0c2d6e4b8a9c3f1e0d2b7a6c5f4e3d2b1a0c9f8e7d6c5b4a3f2e}
   expiration: 86400000
+
+weather:
+  api-key: ${WEATHER_API_KEY:demo_key}
+  default-city: Pune
