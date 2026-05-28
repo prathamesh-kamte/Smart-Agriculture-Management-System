@@ -1,6 +1,7 @@
 package com.smartagri.service;
 
 import com.smartagri.domain.dto.CropDto;
+import com.smartagri.domain.dto.YieldAnalyticsDto;
 import com.smartagri.domain.enums.CropStatus;
 
 import java.util.List;
@@ -30,4 +31,10 @@ public interface CropService {
 
     /** Delete a crop and cascade-remove its expenses. */
     void deleteCrop(Long id, String requesterEmail);
+
+    /**
+     * Aggregate yield and financial analytics for every HARVESTED crop
+     * owned by the given farmer.
+     */
+    List<YieldAnalyticsDto> getYieldAnalytics(String farmerEmail);
 }

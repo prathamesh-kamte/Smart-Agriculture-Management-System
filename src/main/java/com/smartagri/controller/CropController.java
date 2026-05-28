@@ -1,6 +1,7 @@
 package com.smartagri.controller;
 
 import com.smartagri.domain.dto.CropDto;
+import com.smartagri.domain.dto.YieldAnalyticsDto;
 import com.smartagri.domain.enums.CropStatus;
 import com.smartagri.service.CropService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,5 +110,17 @@ public class CropController {
             @AuthenticationPrincipal UserDetails userDetails) {
         cropService.deleteCrop(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * GET /api/crops/analytics/yield — Aggregate yield and financial analytics
+     * for every HARVESTED crop owned by the authenticated farmer.
+     */
+    @GetMapping("/analytics/yield")
+    @Operation(summary = "Get yield analytics for harvested crops")
+    public ResponseEntity<List<YieldAnalyticsDto>> getYieldAnalytics(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                cropService.getYieldAnalytics(userDetails.getUsername()));
     }
 }

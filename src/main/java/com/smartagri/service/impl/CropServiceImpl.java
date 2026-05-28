@@ -1,6 +1,7 @@
 package com.smartagri.service.impl;
 
 import com.smartagri.domain.dto.CropDto;
+import com.smartagri.domain.dto.YieldAnalyticsDto;
 import com.smartagri.domain.enums.CropStatus;
 import com.smartagri.domain.enums.Season;
 import com.smartagri.domain.entity.Crop;
@@ -118,6 +119,17 @@ public class CropServiceImpl implements CropService {
         log.info("Crop id={} deleted by {}", id, requesterEmail);
     }
 
+    @Override
+    public List<YieldAnalyticsDto> getYieldAnalytics(String farmerEmail) {
+        User farmer = findUserOrThrow(farmerEmail);
+        List<Crop> harvestedCrops = cropRepository.findByFarmerIdAndStatus(
+                farmer.getId(), CropStatus.HARVESTED);
+
+        return harvestedCrops.stream()
+                .map(this::toYieldAnalyticsDto)
+                .collect(Collectors.toList());
+    }
+
     private Crop findCropOrThrow(Long id) {
         return cropRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Crop not found with id: " + id));
@@ -175,5 +187,52 @@ public class CropServiceImpl implements CropService {
             dto.setFarmerName(crop.getFarmer().getFullName());
         }
         return dto;
+    }
+
+    /**
+     * Converts a HARVESTED {@link Crop} into a {@link YieldAnalyticsDto}.
+     * All financial and efficiency calculations are performed null-safely;
+     * any field that cannot be computed is left as {@code null}.
+     */
+    private YieldAnalyticsDto toYieldAnalyticsDto(Crop crop) {
+        // ── Yield efficiency ──────────────────────────────────────────────────
+        Double yieldEfficiency = null;
+        if (crop.getActualYieldKg() != null
+                && crop.getExpectedYieldKg() != null
+                && crop.getExpectedYieldKg() != 0.0) {
+            yieldEfficiency = (crop.getActualYieldKg() / crop.getExpectedYieldKg()) * 100.0;
+        }
+
+        // ── Revenue ───────────────────────────────────────────────────────────
+        BigDecimal revenue = null;
+        if (crop.getActualYieldKg() != null && crop.getSellingPricePerKg() != null) {
+            revenue = BigDecimal.valueOf(crop.getActualYieldKg())
+                    .multiply(crop.getSellingPricePerKg());
+        }
+
+        // ── Total expenses (COALESCE in query guarantees non-null) ─────────────
+        BigDecimal totalExpenses = expenseRepository.sumByCropId(crop.getId());
+
+        // ── Profit / loss ─────────────────────────────────────────────────────
+        BigDecimal profitLoss = null;
+        String profitStatus = null;
+        if (revenue != null) {
+            profitLoss = revenue.subtract(totalExpenses);
+            int cmp = profitLoss.compareTo(BigDecimal.ZERO);
+            profitStatus = cmp > 0 ? "PROFIT" : cmp < 0 ? "LOSS" : "BREAK_EVEN";
+        }
+
+        return YieldAnalyticsDto.builder()
+                .cropId(crop.getId())
+                .cropName(crop.getCropName())
+                .season(crop.getSeason() != null ? crop.getSeason().name() : null)
+                .expectedYieldKg(crop.getExpectedYieldKg())
+                .actualYieldKg(crop.getActualYieldKg())
+                .yieldEfficiencyPercent(yieldEfficiency)
+                .totalExpenses(totalExpenses)
+                .revenue(revenue)
+                .profitLoss(profitLoss)
+                .profitStatus(profitStatus)
+                .build();
     }
 }
