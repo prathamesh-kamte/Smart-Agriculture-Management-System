@@ -115,6 +115,15 @@ async function navigateToPanel(panelName) {
       await loadExpensesData();
     } else if (panelName === 'advisories') {
       await loadAdvisoriesData();
+    } else if (panelName === 'tasks') {
+      await loadTasksData();
+    } else if (panelName === 'analytics') {
+      await loadAnalyticsData();
+    } else if (panelName === 'market') {
+      await loadMarketData();
+    } else if (panelName === 'disease') {
+      // Just fetch crops for the select dropdown
+      await loadDiseaseScannerInitialData();
     } else if (panelName === 'profile') {
       await loadProfileData();
     }
@@ -200,6 +209,67 @@ function renderExpenseChart(trends = []) {
 
 // --- PANEL LOADER FUNCTIONS ---
 
+async function loadWeatherWidget(city = 'Pune') {
+  try {
+    const current = await api.getCurrentWeather(city);
+    document.getElementById('weather-desc').textContent = current.description;
+    
+    let badgesHtml = '';
+    if (current.isRainy) badgesHtml += `<span class="badge" style="background:#2196F3; color:white;">Rain</span>`;
+    if (current.isFrosty) badgesHtml += `<span class="badge" style="background:#E0E0E0; color:#333;">Frost</span>`;
+    if (current.temperature > 40) badgesHtml += `<span class="badge" style="background:#F44336; color:white;">Heat</span>`;
+
+    document.getElementById('weather-current-stats').innerHTML = `
+      <div style="background: var(--colors-surface-elevated-dark); padding: 0.5rem 1rem; border-radius: var(--rounded-md);">
+        <span style="font-size: 1.5rem; font-weight: 700; color: var(--colors-primary);">${current.temperature}°C</span>
+      </div>
+      <div style="background: var(--colors-surface-elevated-dark); padding: 0.5rem 1rem; border-radius: var(--rounded-md);">
+        <span style="color: var(--colors-muted); font-size: 0.85rem;">Humidity</span><br>
+        <span style="font-weight: 600;">${current.humidity}%</span>
+      </div>
+      <div style="background: var(--colors-surface-elevated-dark); padding: 0.5rem 1rem; border-radius: var(--rounded-md);">
+        <span style="color: var(--colors-muted); font-size: 0.85rem;">Wind</span><br>
+        <span style="font-weight: 600;">${current.windSpeed} km/h</span>
+      </div>
+      ${badgesHtml ? `<div style="display:flex; gap:0.5rem; align-items:center;">${badgesHtml}</div>` : ''}
+    `;
+
+    const forecast = await api.getWeatherForecast(city);
+    document.getElementById('weather-forecast-row').innerHTML = forecast.map(day => `
+      <div style="background: var(--colors-canvas-dark); border: 1px solid var(--colors-hairline-on-dark); border-radius: var(--rounded-md); padding: 0.75rem; text-align: center; min-width: 90px;">
+        <div style="font-size: 0.8rem; color: var(--colors-muted); margin-bottom: 0.25rem;">${new Date(day.date).toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric'})}</div>
+        <div style="font-weight: 700; font-size: 1.1rem; color: var(--colors-on-dark);">${day.temperature}°C</div>
+        <div style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--colors-primary); text-transform: capitalize;">${day.description}</div>
+      </div>
+    `).join('');
+  } catch (error) {
+    document.getElementById('weather-desc').textContent = 'Failed to load weather.';
+  }
+}
+
+async function loadDashboardMarketPrices() {
+  const tbody = document.getElementById('dashboard-market-prices-tbody');
+  try {
+    const prices = await api.getAllMarketPrices();
+    if (!prices || prices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--colors-muted); padding: 1rem;">No market prices found.</td></tr>`;
+      return;
+    }
+    // Show only top 5 in dashboard
+    tbody.innerHTML = prices.slice(0, 5).map(p => `
+      <tr>
+        <td><strong>${p.cropName}</strong></td>
+        <td>${p.market}, ${p.state}</td>
+        <td>₹${p.minPrice}</td>
+        <td>₹${p.maxPrice}</td>
+        <td style="color: var(--colors-trading-up); font-weight: 600;">₹${p.modalPrice}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--colors-trading-down); padding: 1rem;">Error loading prices</td></tr>`;
+  }
+}
+
 // 1. Dashboard
 async function loadDashboardData() {
   const stats = await api.getDashboardStats();
@@ -224,6 +294,11 @@ async function loadDashboardData() {
 
   // Render SVG chart
   renderExpenseChart(stats.monthlyExpenseTrend);
+
+  // Weather and Market
+  const cityInput = document.getElementById('weather-city-input').value || 'Pune';
+  loadWeatherWidget(cityInput);
+  loadDashboardMarketPrices();
 
   // Load top active advisories
   const advPage = await api.getActiveAdvisories({ size: 3 });
@@ -333,14 +408,22 @@ async function loadCropsData() {
               <span class="crop-meta-label">Harvest Target</span>
               <span class="crop-meta-val binance-plex">${harvestDate}</span>
             </div>
+            <div class="crop-meta-row" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--colors-hairline-on-dark);">
+              <span class="crop-meta-label" style="color:var(--colors-on-dark); font-weight:600;">Profit/Loss</span>
+              <span class="crop-meta-val binance-plex" style="color: ${crop.profitLoss > 0 ? 'var(--colors-trading-up)' : (crop.profitLoss < 0 ? 'var(--colors-trading-down)' : 'gray')}; font-weight:700;">
+                ₹${crop.profitLoss || 0}
+              </span>
+            </div>
             
             <p style="font-size:0.85rem; color:var(--colors-muted); background:var(--colors-canvas-dark); padding:0.6rem; border-radius:var(--rounded-md); margin-top:1rem; border:1px solid var(--colors-hairline-on-dark);">
               ${notesSnippet}
             </p>
           </div>
 
-          <div class="crop-actions">
+          <div class="crop-actions" style="flex-wrap: wrap;">
             ${actionButtons}
+            <button class="btn-secondary btn-photos" data-id="${crop.id}" style="padding:0 0.5rem; height:32px; font-size:0.8rem;">Photos</button>
+            <button class="btn-secondary btn-disease" data-id="${crop.id}" style="padding:0 0.5rem; height:32px; font-size:0.8rem;">Scan</button>
             <button class="btn-secondary edit-crop" data-id="${crop.id}" style="padding:0; width:32px; height:32px; flex-grow:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
             <button class="btn-logout delete-crop" data-id="${crop.id}" style="padding:0; width:32px; height:32px; flex-grow:0; border-color:transparent;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
           </div>
@@ -372,6 +455,29 @@ async function loadCropsData() {
             showToast(err.message, 'error');
           }
         }
+      });
+    });
+
+    // Bind Photos click
+    container.querySelectorAll('.btn-photos').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = Number(e.currentTarget.dataset.id);
+        document.getElementById('photo-crop-id').value = id;
+        loadPhotosGrid(id);
+        openModal('modal-photos');
+      });
+    });
+
+    // Bind Disease click
+    container.querySelectorAll('.btn-disease').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = Number(e.currentTarget.dataset.id);
+        navigateToPanel('disease');
+        // Wait a tick for the panel to load then set the dropdown
+        setTimeout(() => {
+          const select = document.getElementById('disease-crop-select');
+          if (select) select.value = id;
+        }, 300);
       });
     });
 
@@ -535,7 +641,10 @@ async function loadAdvisoriesData() {
             </div>
           </div>
         </div>
-        <button class="btn-acknowledge" data-adv-id="${adv.id}">Acknowledge</button>
+        <div style="display:flex; flex-direction:column; gap:0.5rem; min-width:140px;">
+          <button class="btn-acknowledge" data-adv-id="${adv.id}">Acknowledge</button>
+          <button class="btn-secondary btn-convert-task" data-adv-id="${adv.id}" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; height: 32px;">Convert to Task</button>
+        </div>
       </div>
     `).join('');
 
@@ -547,6 +656,19 @@ async function loadAdvisoriesData() {
           await api.acknowledgeAdvisory(id);
           showToast('Advisory acknowledged');
           loadAdvisoriesData();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+
+    // Bind convert to task clicks
+    container.querySelectorAll('.btn-convert-task').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = Number(e.currentTarget.dataset.advId);
+        try {
+          await api.createTaskFromAdvisory(id);
+          showToast('Task created from advisory');
         } catch (err) {
           showToast(err.message, 'error');
         }
@@ -576,6 +698,252 @@ async function loadProfileData() {
   }
 }
 
+// 6. Tasks
+async function loadTasksData() {
+  const loader = document.getElementById('tasks-loading');
+  if (loader) loader.style.display = 'flex';
+  
+  const cols = {
+    PENDING: document.getElementById('tasks-col-pending'),
+    IN_PROGRESS: document.getElementById('tasks-col-in-progress'),
+    COMPLETED: document.getElementById('tasks-col-completed')
+  };
+  
+  Object.values(cols).forEach(col => col.innerHTML = '');
+
+  try {
+    const tasksPage = await api.getTasks();
+    const tasks = tasksPage.content || [];
+    
+    if (loader) loader.style.display = 'none';
+    
+    tasks.forEach(task => {
+      const col = cols[task.status] || cols.PENDING;
+      const priorityColors = {
+        LOW: 'gray', MEDIUM: 'blue', HIGH: 'orange', URGENT: 'red'
+      };
+      
+      col.innerHTML += `
+        <div class="elevated-container" style="padding: 0.75rem; border-left: 4px solid ${priorityColors[task.priority]};">
+          <div class="flex justify-between align-center">
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.25rem;">${task.title}</h4>
+            <span class="badge" style="font-size:0.6rem; padding:0.1rem 0.3rem;">${task.priority}</span>
+          </div>
+          ${task.description ? `<p style="font-size: 0.8rem; color: var(--colors-muted);">${task.description}</p>` : ''}
+          <div style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--colors-primary);">
+            ${task.cropName ? `Crop: ${task.cropName}` : ''}
+          </div>
+          <div style="font-size: 0.75rem; margin-top: 0.25rem; color: var(--colors-muted);">
+            Due: ${new Date(task.dueDate).toLocaleString()}
+          </div>
+          <div class="flex gap-1" style="margin-top: 0.75rem;">
+            ${task.status !== 'COMPLETED' ? `<button class="btn-secondary btn-task-complete" data-id="${task.id}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; height: auto;">Complete</button>` : ''}
+            <button class="btn-logout btn-task-delete" data-id="${task.id}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; height: auto; border:none; color: var(--colors-trading-down);">Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    
+    // Bind task complete
+    document.querySelectorAll('.btn-task-complete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        try {
+          await api.completeTask(e.currentTarget.dataset.id);
+          showToast('Task marked completed');
+          loadTasksData();
+        } catch(err) {
+          showToast(err.message, 'error');
+        }
+      });
+    });
+    
+    // Bind task delete
+    document.querySelectorAll('.btn-task-delete').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if(confirm('Delete this task?')) {
+          try {
+            await api.deleteTask(e.currentTarget.dataset.id);
+            showToast('Task deleted');
+            loadTasksData();
+          } catch(err) {
+            showToast(err.message, 'error');
+          }
+        }
+      });
+    });
+    
+  } catch (err) {
+    if (loader) loader.style.display = 'none';
+    showToast(err.message, 'error');
+  }
+}
+
+// 7. Analytics
+async function loadAnalyticsData() {
+  const loader = document.getElementById('analytics-loading');
+  if (loader) loader.style.display = 'flex';
+  
+  try {
+    const list = await api.getYieldAnalytics();
+    if (loader) loader.style.display = 'none';
+    
+    const tbody = document.getElementById('analytics-tbody');
+    tbody.innerHTML = list.map(item => {
+      const isProfit = item.profitLoss > 0;
+      const plColor = item.profitLoss === 0 ? 'gray' : (isProfit ? 'var(--colors-trading-up)' : 'var(--colors-trading-down)');
+      return `
+        <tr>
+          <td><strong>${item.cropName}</strong></td>
+          <td>${item.season}</td>
+          <td>${item.expectedYieldKg || 0} kg</td>
+          <td>${item.actualYieldKg || 0} kg</td>
+          <td>${item.efficiencyPercentage || 0}%</td>
+          <td>₹${item.totalRevenue || 0}</td>
+          <td>₹${item.totalExpenses || 0}</td>
+          <td style="color: ${plColor}; font-weight: bold;">₹${item.profitLoss || 0}</td>
+          <td><span class="badge" style="background: ${plColor}; color: white;">${item.status}</span></td>
+        </tr>
+      `;
+    }).join('');
+    
+    // Custom SVG Bar chart for Profit/Loss
+    const chartWrapper = document.getElementById('analytics-chart-wrapper');
+    if (list.length === 0) {
+      chartWrapper.innerHTML = `<div style="text-align:center; color:var(--colors-muted); padding: 2rem;">No data for chart.</div>`;
+      return;
+    }
+    
+    const w = 800; const h = 300;
+    const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+    const chartW = w - padding.left - padding.right;
+    const chartH = h - padding.top - padding.bottom;
+    
+    const maxVal = Math.max(...list.map(i => Math.abs(i.profitLoss || 0)), 100);
+    const scale = (chartH / 2) / maxVal;
+    
+    const barW = Math.min(chartW / list.length * 0.6, 50);
+    
+    let svgBars = '';
+    let svgLabels = '';
+    
+    list.forEach((item, idx) => {
+      const pl = item.profitLoss || 0;
+      const bH = Math.abs(pl) * scale;
+      const x = padding.left + (chartW / list.length) * idx + ((chartW / list.length) - barW) / 2;
+      const y = pl >= 0 ? (padding.top + chartH/2 - bH) : (padding.top + chartH/2);
+      const color = pl >= 0 ? 'var(--colors-trading-up)' : 'var(--colors-trading-down)';
+      
+      svgBars += `<rect x="${x}" y="${y}" width="${barW}" height="${bH}" fill="${color}" rx="2" />`;
+      svgLabels += `<text x="${x + barW/2}" y="${padding.top + chartH + 20}" text-anchor="middle" font-size="12" fill="var(--colors-muted)">${item.cropName.substring(0, 10)}</text>`;
+    });
+    
+    // Zero line
+    const zeroY = padding.top + chartH/2;
+    const zeroLine = `<line x1="${padding.left}" y1="${zeroY}" x2="${w - padding.right}" y2="${zeroY}" stroke="var(--colors-hairline-on-dark)" stroke-width="2" />`;
+    
+    chartWrapper.innerHTML = `
+      <svg width="100%" height="100%" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">
+        ${zeroLine}
+        ${svgBars}
+        ${svgLabels}
+      </svg>
+    `;
+    
+  } catch(err) {
+    if (loader) loader.style.display = 'none';
+    showToast(err.message, 'error');
+  }
+}
+
+// 8. Market Prices
+async function loadMarketData(cropName = '') {
+  try {
+    let prices = [];
+    if (cropName) {
+      prices = await api.getMarketPricesByCrop(cropName);
+    } else {
+      prices = await api.getAllMarketPrices();
+    }
+    
+    const tbody = document.getElementById('market-full-tbody');
+    if (!prices || prices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--colors-muted); padding: 1rem;">No market prices found.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = prices.map(p => `
+      <tr>
+        <td><strong>${p.cropName}</strong></td>
+        <td>${p.market}</td>
+        <td>${p.state}</td>
+        <td>₹${p.minPrice}</td>
+        <td>₹${p.maxPrice}</td>
+        <td style="color: var(--colors-trading-up); font-weight: 600;">₹${p.modalPrice}</td>
+        <td>${p.priceDate}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// 9. Disease Scanner Initial
+async function loadDiseaseScannerInitialData() {
+  try {
+    const cropsRes = await api.getCrops();
+    const select = document.getElementById('disease-crop-select');
+    select.innerHTML = '<option value="">No specific plot</option>' + 
+      (cropsRes.content || []).map(c => `<option value="${c.id}">${c.cropName}</option>`).join('');
+      
+    document.getElementById('disease-scan-result').style.display = 'none';
+    document.getElementById('form-disease-scan').reset();
+  } catch(err) {
+    showToast('Failed to load crops for scanner', 'error');
+  }
+}
+
+// 10. Load Photos Grid
+async function loadPhotosGrid(cropId) {
+  const grid = document.getElementById('photos-grid');
+  grid.innerHTML = '<div style="color:var(--colors-muted); grid-column:1/-1; text-align:center;">Loading...</div>';
+  
+  try {
+    const photos = await api.getCropPhotos(cropId);
+    if (!photos || photos.length === 0) {
+      grid.innerHTML = '<div style="color:var(--colors-muted); grid-column:1/-1; text-align:center;">No photos uploaded yet.</div>';
+      return;
+    }
+    
+    grid.innerHTML = photos.map(photo => `
+      <div style="background:var(--colors-canvas-dark); border-radius:var(--rounded-md); overflow:hidden; position:relative;">
+        <img src="${photo.photoUrl}" alt="${photo.description}" style="width:100%; height:150px; object-fit:cover; display:block;">
+        <div style="padding:0.5rem;">
+          <p style="font-size:0.8rem; margin-bottom:0.25rem;">${photo.description || 'No description'}</p>
+          <p style="font-size:0.65rem; color:var(--colors-muted);">${new Date(photo.uploadedAt).toLocaleString()}</p>
+        </div>
+        <button class="btn-logout delete-photo-btn" data-id="${photo.id}" style="position:absolute; top:0.25rem; right:0.25rem; width:24px; height:24px; padding:0; border-radius:50%; background:rgba(0,0,0,0.5); color:white; border:none;">&times;</button>
+      </div>
+    `).join('');
+    
+    // Bind delete photo click
+    grid.querySelectorAll('.delete-photo-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if(confirm('Delete this photo?')) {
+          try {
+            await api.deleteCropPhoto(cropId, e.currentTarget.dataset.id);
+            showToast('Photo deleted');
+            loadPhotosGrid(cropId);
+          } catch(err) {
+            showToast(err.message, 'error');
+          }
+        }
+      });
+    });
+  } catch(err) {
+    grid.innerHTML = `<div style="color:var(--colors-trading-down); grid-column:1/-1; text-align:center;">${err.message}</div>`;
+  }
+}
+
 // --- FORM MODALS ---
 
 function showCropModal(crop = null) {
@@ -595,13 +963,27 @@ function showCropModal(crop = null) {
     document.getElementById('crop-planting-date').value = crop.plantingDate;
     document.getElementById('crop-harvest-date').value = crop.expectedHarvestDate || '';
     
+    document.getElementById('crop-expected-yield').value = crop.expectedYieldKg || '';
+    document.getElementById('crop-actual-yield').value = crop.actualYieldKg || '';
+    document.getElementById('crop-selling-price').value = crop.sellingPricePerKg || '';
+    
     statusGroup.style.display = 'block';
     document.getElementById('crop-status').value = crop.status;
+    document.getElementById('crop-actual-yield-group').style.display = crop.status === 'HARVESTED' ? 'block' : 'none';
   } else {
     title.textContent = 'Configure New Plot';
     document.getElementById('crop-id-field').value = '';
+    document.getElementById('crop-expected-yield').value = '';
+    document.getElementById('crop-actual-yield').value = '';
+    document.getElementById('crop-selling-price').value = '';
     statusGroup.style.display = 'none';
+    document.getElementById('crop-actual-yield-group').style.display = 'none';
   }
+
+  // Setup actual yield toggle listener
+  document.getElementById('crop-status').onchange = (e) => {
+    document.getElementById('crop-actual-yield-group').style.display = e.target.value === 'HARVESTED' ? 'block' : 'none';
+  };
 
   openModal('modal-crop');
 }
@@ -746,7 +1128,10 @@ document.addEventListener('DOMContentLoaded', () => {
       areaInAcres: parseFloat(document.getElementById('crop-area').value),
       plantingDate: document.getElementById('crop-planting-date').value,
       expectedHarvestDate: document.getElementById('crop-harvest-date').value || null,
-      notes: document.getElementById('crop-notes').value || null
+      notes: document.getElementById('crop-notes').value || null,
+      expectedYieldKg: document.getElementById('crop-expected-yield').value ? parseFloat(document.getElementById('crop-expected-yield').value) : null,
+      actualYieldKg: document.getElementById('crop-actual-yield').value ? parseFloat(document.getElementById('crop-actual-yield').value) : null,
+      sellingPricePerKg: document.getElementById('crop-selling-price').value ? parseFloat(document.getElementById('crop-selling-price').value) : null
     };
 
     if (id) {
@@ -828,6 +1213,146 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('view-all-advisories-link').addEventListener('click', (e) => {
     e.preventDefault();
     navigateToPanel('advisories');
+  });
+
+  // Weather Search
+  document.getElementById('btn-search-weather').addEventListener('click', () => {
+    const city = document.getElementById('weather-city-input').value;
+    if (city) loadWeatherWidget(city);
+  });
+
+  // Market Search
+  document.getElementById('btn-search-market').addEventListener('click', () => {
+    const cropName = document.getElementById('market-search-input').value;
+    loadMarketData(cropName);
+  });
+
+  // Language Switcher
+  const langSelect = document.getElementById('lang-switcher');
+  langSelect.value = localStorage.getItem('sag_lang') || 'en';
+  langSelect.addEventListener('change', async (e) => {
+    const lang = e.target.value;
+    localStorage.setItem('sag_lang', lang);
+    showToast('Language preference saved', 'info');
+    try {
+      if (api.isAuthenticated()) {
+        const user = api.getCurrentUser();
+        if (user) {
+          await api.updateProfile({ fullName: user.fullName, email: user.email, preferredLanguage: lang });
+        }
+      }
+      location.reload(); // Reload to apply i18n
+    } catch(err) {}
+  });
+
+  // Task Modal Trigger
+  document.getElementById('btn-add-task').addEventListener('click', async () => {
+    document.getElementById('form-task').reset();
+    document.getElementById('task-due-date').value = new Date().toISOString().slice(0,16);
+    
+    // Load crops for select
+    const cropsRes = await api.getCrops();
+    const select = document.getElementById('task-crop-select');
+    select.innerHTML = '<option value="">None</option>' + 
+      (cropsRes.content || []).map(c => `<option value="${c.id}">${c.cropName}</option>`).join('');
+      
+    openModal('modal-task');
+  });
+
+  // Form Submit: Task
+  document.getElementById('form-task').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const taskData = {
+      title: document.getElementById('task-title').value,
+      description: document.getElementById('task-desc').value,
+      priority: document.getElementById('task-priority').value,
+      dueDate: document.getElementById('task-due-date').value,
+      cropId: document.getElementById('task-crop-select').value ? Number(document.getElementById('task-crop-select').value) : null
+    };
+    try {
+      await api.createTask(taskData);
+      showToast('Task created successfully');
+      closeModal('modal-task');
+      loadTasksData();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // Form Submit: Disease Scan
+  document.getElementById('form-disease-scan').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('disease-photo');
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    
+    const cropId = document.getElementById('disease-crop-select').value;
+    
+    showToast('Uploading photo for AI analysis...', 'info');
+    try {
+      const res = await api.analyzeDisease(cropId || null, fileInput.files[0]);
+      
+      const confValue = parseFloat(res.confidence);
+      let confColor = 'var(--colors-trading-up)';
+      if (confValue < 40) confColor = 'var(--colors-trading-down)';
+      else if (confValue < 70) confColor = 'orange';
+
+      const resultsDiv = document.getElementById('disease-scan-result');
+      resultsDiv.style.display = 'block';
+      resultsDiv.innerHTML = `
+        <div class="flex justify-between align-center" style="margin-bottom:1rem;">
+          <h3 style="font-size:1.2rem;">${res.diseaseName}</h3>
+          <span class="badge badge-${res.severity.toLowerCase()}">${res.severity}</span>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:0.8rem; color:var(--colors-muted); margin-bottom:0.25rem;">AI Confidence</div>
+          <div style="width:100%; height:8px; background:var(--colors-canvas-dark); border-radius:4px; overflow:hidden;">
+            <div style="width:${res.confidence}; height:100%; background:${confColor};"></div>
+          </div>
+          <div style="font-size:0.75rem; text-align:right; color:${confColor}; margin-top:0.25rem;">${res.confidence}</div>
+        </div>
+        <p style="font-size:0.9rem; color:var(--colors-muted); line-height:1.5; margin-bottom:1.5rem;">${res.description}</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+          <div>
+            <h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:var(--colors-primary);">Recommended Treatments</h4>
+            <ul style="font-size:0.85rem; color:var(--colors-muted); padding-left:1.2rem; line-height:1.5;">
+              ${(res.treatments || []).map(t => `<li style="margin-bottom:0.25rem;">${t}</li>`).join('')}
+            </ul>
+          </div>
+          <div>
+            <h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:var(--colors-on-dark);">Preventive Measures</h4>
+            <ul style="font-size:0.85rem; color:var(--colors-muted); padding-left:1.2rem; line-height:1.5;">
+              ${(res.preventions || []).map(p => `<li style="margin-bottom:0.25rem;">${p}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+      showToast('Analysis complete');
+    } catch(err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // Form Submit: Photo Upload
+  document.getElementById('form-photo-upload').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const cropId = document.getElementById('photo-crop-id').value;
+    const file = document.getElementById('photo-file').files[0];
+    const desc = document.getElementById('photo-desc').value;
+    
+    if(!file || !cropId) return;
+    
+    try {
+      showToast('Uploading photo...', 'info');
+      await api.uploadCropPhoto(cropId, file, desc);
+      showToast('Photo uploaded successfully');
+      document.getElementById('form-photo-upload').reset();
+      
+      // Reload photos grid
+      await loadPhotosGrid(cropId);
+    } catch(err) {
+      showToast(err.message, 'error');
+    }
   });
 
   syncAuthViews();
