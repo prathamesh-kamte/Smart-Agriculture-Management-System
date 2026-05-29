@@ -146,6 +146,13 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- ── AWS SDK v2 – S3 (crop photo storage) ─────────────────────── -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.26.12</version>
+        </dependency>
+
         <!-- ── Testing ───────────────────────────────────────────────────── -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
