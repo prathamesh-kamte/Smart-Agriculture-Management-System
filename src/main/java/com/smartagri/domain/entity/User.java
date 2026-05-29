@@ -51,6 +51,16 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    /**
+     * BCP 47 language tag for the farmer's preferred language.
+     * Supported values: {@code "en"} (English), {@code "hi"} (Hindi),
+     * {@code "mr"} (Marathi).
+     * Advisory messages are generated in this language.
+     */
+    @Column(name = "preferred_language", nullable = false, length = 5)
+    @Builder.Default
+    private String preferredLanguage = "en";
+
     // ─── UserDetails ─────────────────────────────────────────────────────────
 
     @Override

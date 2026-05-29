@@ -15,12 +15,14 @@ import com.smartagri.service.AdvisoryService;
 import com.smartagri.service.WeatherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class AdvisoryServiceImpl implements AdvisoryService {
     private final AdvisoryRepository advisoryRepository;
     private final AdvisoryRuleEngine ruleEngine;
     private final WeatherService weatherService;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional
@@ -40,13 +43,14 @@ public class AdvisoryServiceImpl implements AdvisoryService {
         User farmer = userRepository.findByEmail(farmerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
 
+        Locale locale = localeForUser(farmer);
         List<Crop> activeCrops = cropRepository.findActiveCropsByFarmerId(farmer.getId());
         List<AdvisoryDto> generatedAdvisories = new ArrayList<>();
         List<Advisory> advisoriesToSave = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
 
         for (Crop crop : activeCrops) {
-            List<AdvisoryDto> generated = ruleEngine.evaluate(crop);
+            List<AdvisoryDto> generated = ruleEngine.evaluate(crop, locale);
             for (AdvisoryDto dto : generated) {
                 Advisory advisory = Advisory.builder()
                         .title(dto.getTitle())
@@ -145,6 +149,8 @@ public class AdvisoryServiceImpl implements AdvisoryService {
         User farmer = userRepository.findByEmail(farmerEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + farmerEmail));
 
+        Locale locale = localeForUser(farmer);
+
         // ── Fetch current weather — graceful degradation on failure ───────────
         WeatherDto weather;
         try {
@@ -167,7 +173,8 @@ public class AdvisoryServiceImpl implements AdvisoryService {
             if (weather.isRainy() && status == CropStatus.GROWING) {
                 advisoriesToSave.add(Advisory.builder()
                         .title("Rain expected — irrigation not required today")
-                        .message("Rain expected - skip irrigation today for " + cropName)
+                        .message(messageSource.getMessage("advisory.weather.rain",
+                                new Object[]{cropName}, locale))
                         .severity("INFO")
                         .category("WEATHER")
                         .generatedAt(now)
@@ -182,7 +189,8 @@ public class AdvisoryServiceImpl implements AdvisoryService {
                     && (status == CropStatus.PLANTED || status == CropStatus.GROWING)) {
                 advisoriesToSave.add(Advisory.builder()
                         .title("Frost alert — crop protection required tonight")
-                        .message("Frost alert - protect " + cropName + " with covering tonight")
+                        .message(messageSource.getMessage("advisory.weather.frost",
+                                new Object[]{cropName}, locale))
                         .severity("CRITICAL")
                         .category("WEATHER")
                         .generatedAt(now)
@@ -196,7 +204,8 @@ public class AdvisoryServiceImpl implements AdvisoryService {
             if (weather.getTemperature() > 40.0) {
                 advisoriesToSave.add(Advisory.builder()
                         .title("Extreme heat alert — increase irrigation frequency")
-                        .message("Extreme heat alert - increase irrigation frequency for " + cropName)
+                        .message(messageSource.getMessage("advisory.weather.heat",
+                                new Object[]{cropName}, locale))
                         .severity("WARNING")
                         .category("WEATHER")
                         .generatedAt(now)
@@ -229,5 +238,18 @@ public class AdvisoryServiceImpl implements AdvisoryService {
                 .generatedAt(advisory.getGeneratedAt())
                 .acknowledged(advisory.isAcknowledged())
                 .build();
+    }
+
+    /**
+     * Converts a user's {@code preferredLanguage} tag (e.g. {@code "hi"})
+     * to a {@link Locale}.  Falls back to {@link Locale#ENGLISH} for any
+     * unrecognised or null tag.
+     */
+    private Locale localeForUser(User user) {
+        String lang = user.getPreferredLanguage();
+        if (lang == null || lang.isBlank()) {
+            return Locale.ENGLISH;
+        }
+        return Locale.forLanguageTag(lang);
     }
 }
