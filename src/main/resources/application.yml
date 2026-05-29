@@ -22,3 +22,6 @@ jwt:
 weather:
   api-key: ${WEATHER_API_KEY:demo_key}
   default-city: Pune
+
+market:
+  api-key: ${MARKET_API_KEY:579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b}
