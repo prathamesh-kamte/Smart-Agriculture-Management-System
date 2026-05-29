@@ -8,6 +8,10 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 springdoc:
   api-docs:
@@ -25,3 +29,11 @@ weather:
 
 market:
   api-key: ${MARKET_API_KEY:579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b}
+
+aws:
+  enabled: ${AWS_ENABLED:false}
+  bucket: ${AWS_BUCKET:smart-agri-photos}
+  region: ${AWS_REGION:ap-south-1}
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
+
