@@ -37,3 +37,6 @@ aws:
   access-key: ${AWS_ACCESS_KEY:}
   secret-key: ${AWS_SECRET_KEY:}
 
+plantnet:
+  api-key: ${PLANTNET_API_KEY:}
+  enabled: ${PLANTNET_ENABLED:false}
