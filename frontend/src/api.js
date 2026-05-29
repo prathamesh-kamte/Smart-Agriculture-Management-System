@@ -11,6 +11,8 @@ function getHeaders() {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  const lang = localStorage.getItem('sag_lang') || 'en';
+  headers['Accept-Language'] = lang;
   return headers;
 }
 
@@ -236,6 +238,132 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(profileData),
     });
+    return await handleResponse(response);
+  },
+
+  // --- WEATHER ---
+  async getCurrentWeather(city) {
+    const url = `${API_BASE_URL}/weather/current?city=${encodeURIComponent(city)}`;
+    const response = await fetch(url, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  async getWeatherForecast(city) {
+    const url = `${API_BASE_URL}/weather/forecast?city=${encodeURIComponent(city)}`;
+    const response = await fetch(url, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  // --- ANALYTICS / YIELD ---
+  async getYieldAnalytics() {
+    const response = await fetch(`${API_BASE_URL}/crops/analytics/yield`, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  // --- MARKET PRICES ---
+  async getAllMarketPrices() {
+    const response = await fetch(`${API_BASE_URL}/market/prices/all`, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  async getMarketPricesByCrop(cropName) {
+    const url = `${API_BASE_URL}/market/prices?crop=${encodeURIComponent(cropName)}`;
+    const response = await fetch(url, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  // --- TASKS ---
+  async getTasks() {
+    const response = await fetch(`${API_BASE_URL}/tasks`, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  async createTask(taskData) {
+    const response = await fetch(`${API_BASE_URL}/tasks`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(taskData)
+    });
+    return await handleResponse(response);
+  },
+
+  async completeTask(id) {
+    const response = await fetch(`${API_BASE_URL}/tasks/${id}/complete`, {
+      method: 'PATCH',
+      headers: getHeaders()
+    });
+    return await handleResponse(response);
+  },
+
+  async deleteTask(id) {
+    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    return await handleResponse(response);
+  },
+
+  async createTaskFromAdvisory(advisoryId) {
+    const response = await fetch(`${API_BASE_URL}/tasks/from-advisory/${advisoryId}`, {
+      method: 'POST',
+      headers: getHeaders()
+    });
+    return await handleResponse(response);
+  },
+
+  // --- PHOTOS ---
+  async getCropPhotos(cropId) {
+    const response = await fetch(`${API_BASE_URL}/crops/${cropId}/photos`, { headers: getHeaders() });
+    return await handleResponse(response);
+  },
+
+  async uploadCropPhoto(cropId, file, description) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) formData.append('description', description);
+    
+    // We omit Content-Type so fetch sets it with boundary
+    const headers = getHeaders();
+    delete headers['Content-Type'];
+
+    const response = await fetch(`${API_BASE_URL}/crops/${cropId}/photos`, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+    return await handleResponse(response);
+  },
+
+  async deleteCropPhoto(cropId, photoId) {
+    const response = await fetch(`${API_BASE_URL}/crops/${cropId}/photos/${photoId}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    return await handleResponse(response);
+  },
+
+  // --- DISEASE DETECTION ---
+  async analyzeDisease(cropId, photoFile) {
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+    
+    // We omit Content-Type so fetch sets it with boundary
+    const headers = getHeaders();
+    delete headers['Content-Type'];
+
+    let url = `${API_BASE_URL}/disease/analyze`;
+    if (cropId) url += `?cropId=${cropId}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+    return await handleResponse(response);
+  },
+
+  async getDiseaseHistory(cropId) {
+    const response = await fetch(`${API_BASE_URL}/disease/crop/${cropId}`, { headers: getHeaders() });
     return await handleResponse(response);
   }
 };

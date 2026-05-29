@@ -116,6 +116,30 @@
               </div>
             </li>
             <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="tasks">
+                <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7.5 13.5l2 2 4.5-4.5 1 1-5.5 5.5-3-3 1-1z"/></svg>
+                Tasks
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="analytics">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                Analytics
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="market">
+                <svg viewBox="0 0 24 24"><path d="M16 6V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H2v13c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6h-6zm-6-2h4v2h-4V4z"/></svg>
+                Market Prices
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-link" data-panel="disease">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                Disease Scanner
+              </div>
+            </li>
+            <li class="sidebar-item">
               <div class="sidebar-link" data-panel="profile">
                 <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 Profile
@@ -124,6 +148,13 @@
           </ul>
 
           <div class="sidebar-footer">
+            <div style="margin-bottom: 0.75rem; width: 100%;">
+              <select id="lang-switcher" class="filter-select" style="width: 100%; height: 32px; font-size: 0.8rem; background: var(--colors-canvas-dark); padding: 0.25rem;">
+                <option value="en">English</option>
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="mr">मराठी (Marathi)</option>
+              </select>
+            </div>
             <div class="user-profile-badge">
               <div class="user-avatar" id="avatar-letters">US</div>
               <div class="user-details">
@@ -156,6 +187,30 @@
                   <button class="btn-primary" id="btn-quick-add-crop">
                     Add Crop Plot
                   </button>
+                </div>
+              </div>
+
+              <!-- Weather Widget -->
+              <div class="elevated-container" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="flex justify-between align-center">
+                  <div>
+                    <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark);">Weather Conditions</h3>
+                    <p style="color: var(--colors-muted); font-size: 0.85rem;" id="weather-desc">Loading current conditions...</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <input type="text" id="weather-city-input" class="form-input" placeholder="City Name" value="Pune" style="width: 150px; height: 32px; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+                    <button class="btn-secondary" id="btn-search-weather" style="padding: 0.25rem 0.75rem; height: 32px;">Update</button>
+                  </div>
+                </div>
+                
+                <div class="flex gap-2" id="weather-current-stats" style="margin-bottom: 0.5rem;">
+                  <!-- Injected by JS -->
+                </div>
+
+                <div style="overflow-x: auto; padding-bottom: 0.5rem;">
+                  <div id="weather-forecast-row" style="display: flex; gap: 1rem; min-width: max-content;">
+                    <!-- Injected by JS -->
+                  </div>
                 </div>
               </div>
 
@@ -204,6 +259,32 @@
                   <div id="quick-advisories-list" class="flex flex-col gap-1">
                     <!-- Injected by JS -->
                     <div style="color: var(--colors-muted); text-align: center; padding: 2rem 0; font-size: 0.9rem;">No active advisory logs.</div>
+                  </div>
+                </div>
+
+                <!-- Market Prices Widget -->
+                <div class="elevated-container" style="grid-column: 1 / -1;">
+                  <div class="flex justify-between align-center" style="margin-bottom: 0.25rem;">
+                    <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark);">Market Prices Feed</h3>
+                    <a href="#" class="sidebar-link" data-panel="market" style="font-size: 0.85rem; font-weight: 600; color: var(--colors-primary);">View Market</a>
+                  </div>
+                  <p style="color: var(--colors-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">Real-time price feeds in ₹ per quintal.</p>
+                  
+                  <div style="overflow-x: auto;">
+                    <table class="expense-table" style="width: 100%;">
+                      <thead>
+                        <tr>
+                          <th>Crop Name</th>
+                          <th>Market</th>
+                          <th>Min Price</th>
+                          <th>Max Price</th>
+                          <th>Modal Price</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dashboard-market-prices-tbody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--colors-muted); padding: 1rem;">Loading...</td></tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -329,6 +410,130 @@
 
               <div id="advisories-container" class="advisories-grid">
                 <!-- Injected by JS -->
+              </div>
+            </section>
+
+            <!-- TASKS PANEL -->
+            <section id="panel-tasks" class="app-panel">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Task Management</h2>
+                  <p class="page-subtitle">Track operations and workflow states.</p>
+                </div>
+                <button class="btn-primary" id="btn-add-task">Create Task</button>
+              </div>
+              <div id="tasks-loading" class="loader-container" style="display: none;"><div class="loader"></div></div>
+              <div class="kanban-board" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <!-- Pending Column -->
+                <div class="kanban-column" style="background: var(--colors-canvas-dark); border: 1px solid var(--colors-hairline-on-dark); border-radius: var(--rounded-lg); padding: 1rem;">
+                  <h3 style="font-size: 1rem; color: var(--colors-on-dark); margin-bottom: 1rem; border-bottom: 1px solid var(--colors-hairline-on-dark); padding-bottom: 0.5rem;">Pending</h3>
+                  <div id="tasks-col-pending" class="flex flex-col gap-1"></div>
+                </div>
+                <!-- In Progress Column -->
+                <div class="kanban-column" style="background: var(--colors-canvas-dark); border: 1px solid var(--colors-hairline-on-dark); border-radius: var(--rounded-lg); padding: 1rem;">
+                  <h3 style="font-size: 1rem; color: var(--colors-on-dark); margin-bottom: 1rem; border-bottom: 1px solid var(--colors-hairline-on-dark); padding-bottom: 0.5rem;">In Progress</h3>
+                  <div id="tasks-col-in-progress" class="flex flex-col gap-1"></div>
+                </div>
+                <!-- Completed Column -->
+                <div class="kanban-column" style="background: var(--colors-canvas-dark); border: 1px solid var(--colors-hairline-on-dark); border-radius: var(--rounded-lg); padding: 1rem;">
+                  <h3 style="font-size: 1rem; color: var(--colors-on-dark); margin-bottom: 1rem; border-bottom: 1px solid var(--colors-hairline-on-dark); padding-bottom: 0.5rem;">Completed</h3>
+                  <div id="tasks-col-completed" class="flex flex-col gap-1"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ANALYTICS PANEL -->
+            <section id="panel-analytics" class="app-panel">
+              <div class="page-header">
+                <h2 class="page-title">Yield Analytics</h2>
+                <p class="page-subtitle">Track profit, loss, and operational efficiency.</p>
+              </div>
+              <div id="analytics-loading" class="loader-container" style="display: none;"><div class="loader"></div></div>
+              
+              <div class="elevated-container" style="margin-bottom: 1.5rem;">
+                <h3 style="font-weight: 700; font-size: 1.15rem; color: var(--colors-on-dark); margin-bottom: 1.25rem;">Profit/Loss Breakdown</h3>
+                <div class="chart-container" id="analytics-chart-wrapper" style="border: none; padding: 0; min-height: 300px;">
+                  <!-- Custom SVG Chart injected here -->
+                </div>
+              </div>
+
+              <div class="elevated-container" style="overflow-x: auto;">
+                <table class="expense-table">
+                  <thead>
+                    <tr>
+                      <th>Crop</th>
+                      <th>Season</th>
+                      <th>Expected Yield</th>
+                      <th>Actual Yield</th>
+                      <th>Efficiency</th>
+                      <th>Revenue</th>
+                      <th>Expenses</th>
+                      <th>Profit/Loss</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analytics-tbody">
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- MARKET PRICES PANEL -->
+            <section id="panel-market" class="app-panel">
+              <div class="page-header flex align-center justify-between">
+                <div>
+                  <h2 class="page-title">Market Explorer</h2>
+                  <p class="page-subtitle">Real-time commodity prices across regional markets.</p>
+                </div>
+                <div class="flex gap-1">
+                  <input type="text" id="market-search-input" class="form-input" placeholder="Search Crop Name" style="width: 200px; height: 36px; padding: 0.25rem 0.5rem;">
+                  <button class="btn-primary" id="btn-search-market" style="height: 36px; padding: 0 1rem;">Search</button>
+                </div>
+              </div>
+              
+              <div class="elevated-container" style="overflow-x: auto;">
+                <table class="expense-table" style="width: 100%;">
+                  <thead>
+                    <tr>
+                      <th>Crop Name</th>
+                      <th>Market</th>
+                      <th>State</th>
+                      <th>Min Price (₹)</th>
+                      <th>Max Price (₹)</th>
+                      <th>Modal Price (₹)</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="market-full-tbody">
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- DISEASE SCANNER PANEL -->
+            <section id="panel-disease" class="app-panel">
+              <div class="page-header">
+                <h2 class="page-title">AI Disease Scanner</h2>
+                <p class="page-subtitle">Upload crop photos for AI-powered disease detection.</p>
+              </div>
+              <div class="elevated-container" style="max-width: 600px;">
+                <form id="form-disease-scan">
+                  <div class="form-group">
+                    <label for="disease-crop-select">Select Crop (Optional)</label>
+                    <select id="disease-crop-select" class="filter-select" style="width: 100%; height: 40px;">
+                      <option value="">No specific plot</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="disease-photo">Crop Photo (JPG/PNG, Max 5MB)</label>
+                    <input type="file" id="disease-photo" class="form-input" accept="image/jpeg,image/png" required style="padding-top: 0.5rem;">
+                  </div>
+                  <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Analyze Photo</button>
+                </form>
+                
+                <div id="disease-scan-result" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--colors-hairline-on-dark);">
+                  <!-- Results injected by JS -->
+                </div>
               </div>
             </section>
 
@@ -464,6 +669,21 @@
               </div>
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="crop-expected-yield">Expected Yield (Kg)</label>
+                <input type="number" id="crop-expected-yield" class="form-input" step="0.01" min="0">
+              </div>
+              <div class="form-group" id="crop-actual-yield-group" style="display: none;">
+                <label for="crop-actual-yield">Actual Yield (Kg)</label>
+                <input type="number" id="crop-actual-yield" class="form-input" step="0.01" min="0">
+              </div>
+              <div class="form-group">
+                <label for="crop-selling-price">Price Per Kg (₹)</label>
+                <input type="number" id="crop-selling-price" class="form-input" step="0.01" min="0">
+              </div>
+            </div>
+
             <div class="form-group" id="crop-status-field-group" style="display: none;">
               <label for="crop-status">Status</label>
               <select id="crop-status" class="filter-select" style="width:100%; height:40px;">
@@ -547,6 +767,78 @@
               <button type="submit" class="btn-primary" id="btn-save-expense">Confirm Log</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- C. Task Modal (Add) -->
+      <div id="modal-task" class="modal-overlay">
+        <div class="modal-content">
+          <button class="modal-close" data-close>&times;</button>
+          <div class="modal-header">
+            <h3 class="modal-title">Create New Task</h3>
+          </div>
+          <form id="form-task">
+            <div class="form-group">
+              <label for="task-title">Title</label>
+              <input type="text" id="task-title" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label for="task-desc">Description</label>
+              <textarea id="task-desc" class="form-input" rows="2"></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="task-priority">Priority</label>
+                <select id="task-priority" class="filter-select" style="width:100%; height:40px;" required>
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="URGENT">Urgent</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="task-due-date">Due Date</label>
+                <input type="datetime-local" id="task-due-date" class="form-input" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="task-crop-select">Associated Crop (Optional)</label>
+              <select id="task-crop-select" class="filter-select" style="width:100%; height:40px;">
+                <option value="">None</option>
+              </select>
+            </div>
+            <div class="modal-buttons">
+              <button type="button" class="btn-secondary" data-close>Cancel</button>
+              <button type="submit" class="btn-primary">Create Task</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- D. Photos Modal -->
+      <div id="modal-photos" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+          <button class="modal-close" data-close>&times;</button>
+          <div class="modal-header">
+            <h3 class="modal-title">Crop Photos</h3>
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <form id="form-photo-upload" style="display: flex; gap: 1rem; align-items: flex-end;">
+              <input type="hidden" id="photo-crop-id">
+              <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                <label>Upload Photo</label>
+                <input type="file" id="photo-file" class="form-input" accept="image/*" required style="padding-top: 0.5rem;">
+              </div>
+              <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                <label>Description</label>
+                <input type="text" id="photo-desc" class="form-input" placeholder="e.g. Day 15 Growth">
+              </div>
+              <button type="submit" class="btn-primary" style="height: 40px; padding: 0 1rem;">Upload</button>
+            </form>
+          </div>
+          <div id="photos-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-height: 400px; overflow-y: auto;">
+            <!-- Photos injected here -->
+          </div>
         </div>
       </div>
 
